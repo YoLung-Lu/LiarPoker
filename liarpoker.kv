@@ -1,0 +1,92 @@
+<Public_Area>:
+    orientation: 'horizontal'
+    id: public_area
+    size_hint: (1, 0.4)
+    pos_hint: {'center_x': 0.5, 'y': 0.3}
+
+    but_public: but_public
+
+    Label:
+        id: player1_score
+        text: "Player 1" + "\n  " + "500"
+
+    Label:
+        id: player2_score
+        text: "Player 2" + "\n  " + "500"
+
+    Button:
+        id: but_public
+        text: 'New Round'
+        size_hint_y: 0.8
+        on_press: root.press_new_round('but_public')
+
+
+<PlayerDeck_Top>:
+    orientation: 'horizontal'
+    id: player2_box
+    size_hint: (0.8, 0.3)
+    pos_hint: {'top': 1, 'right': 1}
+
+    but_2: but_2
+
+    Button:
+        id: but_2
+        text: 'Confirm'
+        size_hint_y: 0.8
+        on_press: root.press_player_confirm('but_2')
+
+<PlayerDeck_Bottom>:
+    orientation: 'horizontal'
+    id: player1_box
+    size_hint: (0.8, 0.3)
+    pos_hint: {'x': 0, 'y': 0}
+
+    but_1: but_1
+
+    Button:
+        id: but_1
+        text: 'Confirm'
+        size_hint_y: 0.8
+        on_press: root.press_player_confirm('but_1')
+
+
+<SingleCard>:
+    size: 90, 150
+    pos: root.pos
+    la: la
+    lb: lb
+    check: check
+
+    canvas:
+        Color:
+            rgba: 255,255,255,0.5
+        Rectangle:
+            pos: self.pos
+            size: self.size[0], self.size[1]*0.8
+    CheckBox:
+        id: check
+        size_hint: (.1, .1)
+        pos_hint: {'x': .45, 'top': 0.9}
+        text: 'Button 1'
+        #on_press: root.get_widget_by_id('check')
+
+    Label:
+        id: la
+        font_size: 15
+        size_hint: (.2, 0.1)
+        pos_hint: {'x': .1, 'y': 0.65}
+        #pos_hint:{'x':0.1, 'y':1}
+        #pos: (self.pos[0]+10), (self.pos[1]+10 )
+        #center_x: self.width / 4
+        #pos_hint: {'x': .1, 'y': .9}
+        text: ""
+
+    Label:
+        id: lb
+        font_size: 15
+        size_hint: (.2, 0.1)
+        pos_hint: {'x': .7, 'y': 0.05}
+        #pos:10, 10
+        #center_x: self.width / 4 * 3
+        #pos_hint: {'x': .9, 'y': .1}
+        text: ""
