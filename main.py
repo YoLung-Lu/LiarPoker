@@ -14,186 +14,264 @@ class SingleCard(FloatLayout):
     la = ObjectProperty(None)
     lb = ObjectProperty(None)
     check = ObjectProperty(None)
+    is_selected = False
 
     def get_widget_by_id(self, w_id):
         print self.ids[w_id]
 
+    def disable_check(self):
+        self.remove_widget(self.check)
+
+    def event_checkbox_selected(self):
+        # change the status of card based on checkbox
+        if self.check.state == "down":
+            self.is_selected = True
+        else:
+            self.is_selected = False
+        #print self.id + str(self.selected)
+
 class PlayerDeck_Bottom(BoxLayout):
+    id = "player1_box"
     but_1 = ObjectProperty(None)
 
     def init_deck(self):
         b = self.children[0]
         self.remove_widget(b)
-        cards = []
         for i in range(5):
-            cards.append(SingleCard())
-            cards[i].id = 'player1_card' + str(i)
-            self.add_widget(cards[i])
+            c = SingleCard(id = 'player1_card' + str(i))
+            self.ids[c.id] = c
+            self.add_widget(c)
             self.add_widget(Widget(size_hint= (0.01, 1)) )
 
         self.add_widget(b)
 
-    def update_hand(self, hand, round = 1):
-        # input hand of player, update to widget base on current round
-        if round == 1:
-            for i in range(2,12,2):
-                self.children[i].lb.text = Card.int_to_pretty_str( hand[( i/2)-1 ] )
-        elif round == 2:
-            print round
+    def update_hand(self, hand, turn = 1):
+        # input hand of player, update to widget base on current turn
+        if turn == 1:
+            for i in range(5):
+                self.ids['player1_card'+str(i)].lb.text = Card.int_to_pretty_str( hand[i] )
+        elif turn == 2:
+            print turn
 
-    def press_player_confirm(self, w_id):
-        print self.children[1]
-        print w_id
-        pass
+    def set_button_message(self, msg):
+        self.ids.but_1.text = msg
+
+    def press_player_confirm(self):
+        # Notify the selected cards
+        pickedCards = []
+        for i in range(5):
+            if self.ids['player1_card'+str(i)].is_selected:
+                pickedCards.append(i)
+        self.parent.on_player_confirm("player1", pickedCards)
+
 
 class PlayerDeck_Top(BoxLayout):
+    id = "player2_box"
     but_2 = ObjectProperty(None)
 
     def init_deck(self):
-        cards = []
+        # create widgets of player deck
         for i in range(5):
-            cards.append(SingleCard())
-            cards[i].id = 'player2_card' + str(i)
-            self.add_widget(cards[i])
+            c = SingleCard(id = 'player2_card' + str(i))
+            self.ids[c.id] = c
+            self.add_widget(c)
             self.add_widget(Widget(size_hint= (0.01, 1)) )
 
-    def update_hand(self, hand, round = 1):
-        # input hand of player, update to widget base on current round
-        if round == 1:
-            for i in range(1,11,2):
-                self.children[i].la.text = Card.int_to_pretty_str( hand[( i/2)-1 ] )
-        elif round == 2:
-            print round
+    def update_hand(self, hand, turn = 1):
+        # give cards to player by setting text on card
+        # input hand of player, update to widget base on current turn
+        if turn == 1:
+            for i in range(5):
+                self.ids['player2_card'+str(i)].la.text = Card.int_to_pretty_str( hand[i] )
+        elif turn == 2:
+            print turn
 
-    def press_player_confirm(self, w_id):
-        print self.children[1]
-        print w_id
-        pass
+    def set_button_message(self, msg):
+        self.ids.but_2.text = msg
+
+    def press_player_confirm(self):
+        # Notify the selected cards
+        pickedCards = []
+        for i in range(5):
+            if self.ids['player2_card'+str(i)].is_selected:
+                pickedCards.append(i)
+        self.parent.on_player_confirm("player2", pickedCards)
 
 class Public_Area(BoxLayout):
+    id = "public_area"
     but_public = ObjectProperty(None)
     player1_score = ObjectProperty(None)
 
     def init_deck(self):
-        b,c = self.children[0], self.children[1]
+        b,b2 = self.children[0], self.children[1]
         self.remove_widget(b)
-        self.remove_widget(c)
-        cards = []
+        self.remove_widget(b2)
+
+        # put 2 public cards before player2_score and button
         for i in range(2):
-            cards.append(SingleCard())
-            cards[i].id = 'public_card' + str(i)
-            cards[i].remove_widget(cards[i].check)
-            self.add_widget(cards[i])
+            c = SingleCard(id = 'public_card' + str(i))
+            # Register ids for public cards
+            self.ids[c.id] = c
+            c.disable_check()
+            self.add_widget(c)
+            # space between cards
             self.add_widget(Widget(size_hint= (0.01, 1)) )
-        self.add_widget(c)
+        self.add_widget(b2)
         self.add_widget(b)
 
     def update_hand(self, hand):
-        print self.ids
-        print self.ids.player1_score
-        self.children[3].la.text = Card.int_to_pretty_str( hand[0] )
-        self.children[3].lb.text = self.children[3].la.text
-        self.children[5].la.text = Card.int_to_pretty_str( hand[1] )
-        self.children[5].lb.text = self.children[5].la.text
+        self.ids.public_card0.la.text = Card.int_to_pretty_str( hand[0] )
+        self.ids.public_card0.lb.text = self.ids.public_card0.la.text
+        self.ids.public_card1.la.text = Card.int_to_pretty_str( hand[1] )
+        self.ids.public_card1.lb.text = self.ids.public_card1.la.text
 
     def set_message(self, msg):
         self.but_public.text = msg
         pass
 
+    def update_score(self, p1_score, p2_score):
+        # TODO: using binding to handle this??
+        self.ids.player1_score.text = str(p1_score)
+        self.ids.player2_score.text = str(p2_score)
+
     def press_new_round(self, w_id):
+        self.parent.press_new_round()
         pass
 
 class Player:
     def __init__(self, id):
         self.id = id
         self.hand = []
-        self.score = 500
+        self.chip = 500
+        self.bid = 0
+
+    def round_reset(self):
+        self.hand = []
+        self.bid = 0
+
+    def bid(self, bidding):
+        if bidding < self.chip:
+            self.bid = bidding
+            return True
+        return False
+
 
 class Game(FloatLayout):
-    id = "rootLayout"
+    id = "root"
+    turn = 0
+    round = 0
 
-    def _set_(self):
+    def _round_reset(self):
+        self.round += 1
+        self.deck.shuffle()
+        self.player[0].round_reset()
+        self.player[1].round_reset()
+        self.board = []
+
+    def build(self):
+        # init game objects
         self.deck = Deck()
+        self.evaluator = Evaluator()
         self.player = []
         self.player.append( Player(0) )
         self.player.append( Player(1) )
+        # board stands for cards on board
+        self.board = []
 
-    def _new_round(self):
-        self.deck.shuffle()
-        self.player[0].hand = []
-        self.player[1].hand = []
-
-
-    def _get_public_area(self):
-        box = BoxLayout(orientation = 'horizontal',
-                        id = 'public_area',
-            			size_hint= (1, 0.4),
-            			pos_hint= {'center_x': 0.5, 'y': 0.3})
-
-        p1_score = Label(id = 'p1_score',
-                        text = "Player 1" + "\n  " + "500")
-        box.add_widget(p1_score)
-
-        hand = self.deck.draw(2)
-        cards = []
-        for i in range(2):
-            cards.append(SingleCard())
-            cards[i].la.text = Card.int_to_pretty_str( hand[i] )
-            cards[i].lb.text = Card.int_to_pretty_str( hand[i] )
-            cards[i].remove_widget(cards[i].check)
-            box.add_widget(cards[i])
-            box.add_widget(Widget(size_hint= (0.05, 1)) )
-
-        p2_score = Label(id = 'p2_score',
-                        text = "Player 1" + "\n  " + "500")
-        box.add_widget(p2_score)
-
-        but = Button(text="NewRound",
-                    id = "but_1",
-                    size_hint_y = 0.8)
-        but.bind(on_press=self.press_new_round)
-        box.add_widget(but)
-        return box
-
-    def build(self):
-
+        # create view objects
         box = PlayerDeck_Bottom()
         box.init_deck()
-        box.update_hand(self.deck.draw(5))
-        self.add_widget(box)
-
         box2 = PlayerDeck_Top()
         box2.init_deck()
-        box2.update_hand(self.deck.draw(5))
-        self.add_widget(box2)
-
-        #public_area = self._get_public_area()
         public_area = Public_Area()
         public_area.init_deck()
-        public_area.update_hand( self.deck.draw(2) )
-        public_area.set_message("MSG")
+
+        # register view objects
+        self.add_widget(box)
+        self.add_widget(box2)
         self.add_widget(public_area)
+        self.ids[box.id] = box
+        self.ids[box2.id] = box2
+        self.ids[public_area.id] = public_area
 
-        print "*"*20
-        #print dir(box)
-        #print dir( cards[0].canvas)
-        #print card.la.pos
-        #print card.la.pos[0]
-        print "*"*20
+    def on_player_confirm(self, player, cardList):
+        # There are 3 turns in a round of a game. Players must confirm there cards to finish the turn
+        """
+        In every turn, check:
+            (1) if player's confirm ligelly (turn1: 3 cards selected, turn2: 1 card, turn3: lie or not)
+                -> rearrange sequence of cards and lock cards
+            (2) if both of players finished confirm
+                -> enter next turn
+        """
+        print player
+        print cardList
+        # TODO: no bidding process
+        if self.turn == 1:
+            pass
 
+    def round_play(self):
+        self._round_reset()
+        # deal cards
+        self.player[0].hand = self.deck.draw(5)
+        self.player[1].hand = self.deck.draw(5)
+        self.board = self.deck.draw(2)
+
+        # update view
+        self.ids.player1_box.update_hand(self.player[0].hand)
+        self.ids.player2_box.update_hand(self.player[1].hand)
+        self.ids.public_area.update_hand(self.board)
+        self.ids.public_area.update_score(500, 500)
+
+        # TODO: turns in a round not implemented yet
+        self.round_finish()
+
+    def round_finish(self):
+        # evaluate cards
+        self.player[0].cardScore = self.evaluator.evaluate(self.board, self.player[0].hand)
+        self.player[0].rank = self.evaluator.get_rank_class(self.player[0].cardScore)
+
+        self.player[1].cardScore = self.evaluator.evaluate(self.board, self.player[1].hand)
+        self.player[1].rank = self.evaluator.get_rank_class(self.player[1].cardScore)
+
+        print '*'*50
+        print "GAME RESULT:"
+        print "Player 1 hand rank = %d (%s)\n" % (self.player[0].cardScore, self.player[0].rank)
+        print "Player 2 hand rank = %d (%s)\n" % (self.player[1].cardScore, self.player[1].rank)
+        #evaluator.class_to_string(p1_class)
+
+        roundMsg = ""
+        if self.player[0].cardScore < self.player[1].cardScore:
+            roundMsg = "Player1 wins"
+        else:
+            roundMsg = "Player2 wins"
+        print '*'*50
+
+        # temply shows card rank here
+        self.ids.player1_box.set_button_message( self.evaluator.class_to_string(self.player[0].rank ))
+        self.ids.player2_box.set_button_message( self.evaluator.class_to_string(self.player[1].rank ))
+
+        self.ids.public_area.set_message("Round : " + str(self.round) +"\n" + roundMsg + "\nNew Round" )
+
+    def round_turn_1(self):
+        pass
+
+    def round_turn_2(self):
+        pass
+
+    def round_turn_3(self):
+        pass
 
     def update(self, dt):
         pass
 
-    def press_new_round(self, instance):
+    def press_new_round(self):
         # implement "new round" here
-        #print instance.text
-        #print instance.id
-        #print instance.parent.id
-        #print self.children
-        self.clear_widgets()
-        print dir(self)
-        #self.remove_widget()
+        #self.clear_widgets()
+        print self.ids.player1_box.ids.player1_card0
+        print self.ids.player1_box.ids.player1_card0.check.on_active
+        #print self.ids.player1_box.ids.player1_card0.check.on_active
+
+        self.round_play()
 
     def press_player_confirm(self, instance):
         # players confirm deck
@@ -202,8 +280,8 @@ class Game(FloatLayout):
 class LiarPokerApp(App):
     def build(self):
         game = Game()
-        game._set_()
         game.build()
+        game.round_play()
         #Clock.schedule_interval(game.update, 1.0 / 60.0)
         return game
 

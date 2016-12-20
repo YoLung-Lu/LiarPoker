@@ -1,3 +1,11 @@
+<Game>:
+    canvas:
+        Color:
+            rgba: 10,100,10, 0.1
+
+        Rectangle:
+            size: self.size
+
 <Public_Area>:
     orientation: 'horizontal'
     id: public_area
@@ -33,7 +41,7 @@
         id: but_2
         text: 'Confirm'
         size_hint_y: 0.8
-        on_press: root.press_player_confirm('but_2')
+        on_press: root.press_player_confirm()
 
 <PlayerDeck_Bottom>:
     orientation: 'horizontal'
@@ -47,7 +55,7 @@
         id: but_1
         text: 'Confirm'
         size_hint_y: 0.8
-        on_press: root.press_player_confirm('but_1')
+        on_press: root.press_player_confirm()
 
 
 <SingleCard>:
@@ -68,6 +76,7 @@
         size_hint: (.1, .1)
         pos_hint: {'x': .45, 'top': 0.9}
         text: 'Button 1'
+        on_active: root.event_checkbox_selected()
         #on_press: root.get_widget_by_id('check')
 
     Label:
