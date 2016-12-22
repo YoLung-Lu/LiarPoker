@@ -20,7 +20,7 @@ class CardSelector(FloatLayout):
             #print self.suit + str(int(self.ids.slider_id.value))
             card = self.cardDict[ (int(self.ids.slider_id.value)) ] + self.suit.lower()
 
-            self.board.on_lie(self.id, card)
+            self.board.on_player_lie(self.id, card)
 
     def _select_suit(self, suit):
         self.suit = suit

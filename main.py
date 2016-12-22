@@ -10,216 +10,26 @@ from kivy.uix.togglebutton import ToggleButton
 from kivy.properties import NumericProperty, ReferenceListProperty,\
     ObjectProperty
 
-from deuces import Card, Evaluator, Deck
-from CardSelector import CardSelector
+from __init__ import *
 
-
-class SingleCard(FloatLayout):
-    la = ObjectProperty(None)
-    lb = ObjectProperty(None)
-    check = ObjectProperty(None)
-
-    def get_widget_by_id(self, w_id):
-        #print self.ids[w_id]
-        pass
-
-    def uncheck(self):
-        self.check.active = False
-
-    def enable_check(self):
-        if not self.check.parent:
-            self.add_widget(self.check)
-
-    def disable_check(self):
-        self.remove_widget(self.check)
-
-class PlayerDeck_Bottom(BoxLayout):
-    id = "player1_box"
-    but_1 = ObjectProperty(None)
-
-    def init_deck(self):
-        b = self.children[0]
-        self.remove_widget(b)
-        for i in range(5):
-            c = SingleCard(id = 'player1_card' + str(i))
-            self.ids[c.id] = c
-            self.add_widget(c)
-            self.add_widget(Widget(size_hint= (0.01, 1)) )
-
-        self.add_widget(b)
-
-    def round_reset(self):
-        for i in range(5):
-            self.ids['player1_card'+str(i)].enable_check()
-
-    def update_hand(self, hand, turn = 1):
-        # input hand of player, update to widget base on current turn
-        openCardIndex={1:5, 2:1, 3:0, 4:-1}
-        for i in range(5):
-            self.ids['player1_card'+str(i)].lb.text = Card.int_to_pretty_str( hand[i] )
-            if i > openCardIndex[turn]:
-                self.ids['player1_card'+str(i)].la.text = Card.int_to_pretty_str( hand[i] )
-
-    def set_button_message(self, msg):
-        self.ids.but_1.text = msg
-
-    def press_player_confirm(self):
-        # Notify the selected cards
-        pickedCards = []
-        for i in range(5):
-            if self.ids['player1_card'+str(i)].check.active:
-                pickedCards.append(i)
-        self.parent.on_player_confirm(self.id, 0, pickedCards)
-
-    def update_turn(self, turn):
-        # cancel selection and remove last 3 checkbox
-        openCardIndex={1:5, 2:1, 3:0, 4:-1}
-        for i in range(5):
-            self.ids['player1_card'+str(i)].uncheck()
-            if i > openCardIndex[turn]:
-                self.ids['player1_card'+str(i)].disable_check()
-
-    def add_lie_widget(self, widget):
-        self.add_widget(widget)
-        self.ids[widget.id] = widget
-        self.size_hint_x = 1
-
-class PlayerDeck_Top(BoxLayout):
-    id = "player2_box"
-    but_2 = ObjectProperty(None)
-
-    def init_deck(self):
-        # create widgets of player deck
-        for i in range(5):
-            c = SingleCard(id = 'player2_card' + str(i))
-            self.ids[c.id] = c
-            self.add_widget(c)
-            self.add_widget(Widget(size_hint= (0.01, 1)) )
-
-    def round_reset(self):
-        for i in range(5):
-            self.ids['player2_card'+str(i)].enable_check()
-
-    def update_hand(self, hand, turn = 1):
-        # give cards to player by setting text on card
-        # input hand of player, update to widget base on current turn
-        # openCard stands for card that can be seen by opponent
-        openCardIndex={1:5, 2:1, 3:0, 4:-1}
-        for i in range(5):
-            self.ids['player2_card'+str(i)].la.text = Card.int_to_pretty_str( hand[i] )
-            if i > openCardIndex[turn]:
-                self.ids['player2_card'+str(i)].lb.text = Card.int_to_pretty_str( hand[i] )
-
-    def set_button_message(self, msg):
-        self.ids.but_2.text = msg
-
-    def press_player_confirm(self):
-        # Notify the selected cards
-        pickedCards = []
-        for i in range(5):
-            if self.ids['player2_card'+str(i)].check.active:
-                pickedCards.append(i)
-        self.parent.on_player_confirm(self.id, 1, pickedCards)
-
-    def update_turn(self, turn):
-        # cancel selection and remove last 3 checkbox
-        openCardIndex={1:5, 2:1, 3:0, 4:-1}
-        for i in range(5):
-            self.ids['player2_card'+str(i)].uncheck()
-            if i > openCardIndex[turn]:
-                self.ids['player2_card'+str(i)].disable_check()
-
-    def add_lie_widget(self, widget):
-        print self.children
-        self.add_widget(widget, index=(self.children) )
-        self.ids[widget.id] = widget
-        self.size_hint_x = 1
-        print self.children
-
-class Public_Area(BoxLayout):
-    id = "public_area"
-    but_public = ObjectProperty(None)
-    player1_score = ObjectProperty(None)
-
-    def init_deck(self):
-        b,b2 = self.children[0], self.children[1]
-        self.remove_widget(b)
-        self.remove_widget(b2)
-
-        # put 2 public cards before player2_score and button
-        for i in range(2):
-            c = SingleCard(id = 'public_card' + str(i))
-            # Register ids for public cards
-            self.ids[c.id] = c
-            c.disable_check()
-            self.add_widget(c)
-            # space between cards
-            self.add_widget(Widget(size_hint= (0.01, 1)) )
-        self.add_widget(b2)
-        self.add_widget(b)
-
-    def update_hand(self, hand):
-        self.ids.public_card0.la.text = Card.int_to_pretty_str( hand[0] )
-        self.ids.public_card0.lb.text = self.ids.public_card0.la.text
-        self.ids.public_card1.la.text = Card.int_to_pretty_str( hand[1] )
-        self.ids.public_card1.lb.text = self.ids.public_card1.la.text
-
-    def set_message(self, msg):
-        self.but_public.text = msg
-        pass
-
-    def update_score(self, p1_score, p2_score):
-        # TODO: using binding to handle this??
-        self.ids.player1_score.text = str(p1_score)
-        self.ids.player2_score.text = str(p2_score)
-
-    def press_new_round(self, w_id):
-        self.parent.press_new_round()
-        pass
-
-class Player:
-    def __init__(self, id):
-        self.id = id
-        self.hand = []
-        self.chip = 500
-        self.bid = 0
-        self.currentTurn = 1
-        self.lie = False
-
-    def round_reset(self):
-        self.hand = []
-        self.bid = 0
-        self.currentTurn = 1
-        self.lie = False
-
-    def bid(self, bidding):
-        if bidding < self.chip:
-            self.bid = bidding
-            return True
-        return False
-
-    def reorderCard(self, cardList):
-        delta = 0
-        for i in cardList:
-            self.hand.append( self.hand.pop(i-delta) )
-            delta += 1
 
 class Game(FloatLayout):
     id = "root"
     turn = 1
     round = 0
 
-
     def _round_reset(self):
+        # At the end of round, update data and views
         self.turn = 1
         self.round += 1
         self.deck.shuffle()
         self.player[0].round_reset()
         self.player[1].round_reset()
+
+        # TODO: remove lie panel from playerbox
         self.ids.player1_box.round_reset()
         self.ids.player2_box.round_reset()
         self.board = []
-
 
     def build(self):
         # init game objects
@@ -248,6 +58,7 @@ class Game(FloatLayout):
         self.ids[public_area.id] = public_area
 
     def round_play(self):
+        # TODO: check if need this at first round ??
         self._round_reset()
         # deal cards
         self.player[0].hand = self.deck.draw(5)
@@ -260,7 +71,6 @@ class Game(FloatLayout):
         self.ids.public_area.update_hand(self.board)
         self.ids.public_area.update_score(500, 500)
 
-        # TODO: turns in a round not implemented yet
         #self.round_finish()
 
     def round_finish(self):
@@ -291,16 +101,20 @@ class Game(FloatLayout):
         self.ids.public_area.set_message("Round : " + str(self.round) +"\n" + roundMsg + "\nNew Round" )
 
     def on_player_confirm(self, boxid, thisPlayer, cardList, cardPicked = None):
-        # There are 3 turns in a round of a game. Players must confirm there cards to finish the turn
+        # There are 4 turns in a round of a game. Players must confirm there cards to finish the turn
         """
         In every turn, check:
             (1) if player's confirm ligelly (turn1: 3 cards selected, turn2: 1 card, turn3: lie or not)
                 -> rearrange sequence of cards and lock cards
-            (2) if both of players finished confirm
-                -> enter next turn
+                -> if both of players finished confirm -> enter next turn
+            (2) Turn3: if player lie (implemented at "on_player_lie" method)
+                -> Change card and player.state.lie
+                -> if both of players finished confirm or lie -> enter next turn
+            (3) Turn4: if players suspect opponent lied.
+                -> decide winner and odds
         """
         print cardList
-        # TODO: no bidding process
+        # TODO: no betting process
         if self.turn == 1:
             # check if 3 cards selected
             if len(cardList) == 3 and self.player[thisPlayer].currentTurn == 1:
@@ -320,7 +134,31 @@ class Game(FloatLayout):
             if self.player[thisPlayer^1].currentTurn == 3:
                 # two players both finished turn 1
                 self.round_turn_2_end()
+        elif self.turn == 3:
+            # TODO: implement not lie flow
+            pass
+        elif self.turn == 4:
+            # TODO: implement not suspect flow
+            pass
 
+
+    def on_player_lie(self, player, card):
+        print str(player) + "made a lie to card: " + card
+        card = Card.new(card)
+        pno = int(player[-1]) - 1
+
+        if self.player[pno].hand[0] != card:
+            self.player[pno].hand.pop(0)
+            self.player[pno].hand.insert(0, card)
+            self.player[pno].currentTurn = 4
+            self.ids[player+"_box"].update_turn(3)
+            self.ids[player+"_box"].update_hand(self.player[pno].hand)
+            if self.player[pno^1].currentTurn == 4:
+                self.round_turn_3_end()
+
+    def on_player_suspect(self, player):
+        print str(player) + "suspect his opponent lied."
+        pass
 
     def round_turn_1_end(self):
         self.turn = 2
@@ -342,25 +180,14 @@ class Game(FloatLayout):
         self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
         self.round_finish()
 
+    def round_turn_4_end(self):
+        pass
+
     def _create_liar_selector(self, player):
         # create a card selector for players to tell lie
         cs = CardSelector(id=player)
         cs.build(self)
         return cs
-
-    def on_lie(self, player, card):
-        print str(player) + "made a lie to card: " + card
-        card = Card.new(card)
-        pno = int(player[-1]) - 1
-
-        if self.player[pno].hand[0] != card:
-            self.player[pno].hand.pop(0)
-            self.player[pno].hand.insert(0, card)
-            self.player[pno].currentTurn = 4
-            self.ids[player+"_box"].update_turn(3)
-            self.ids[player+"_box"].update_hand(self.player[pno].hand)
-            if self.player[pno^1].currentTurn == 4:
-                self.round_turn_3_end()
 
     def update(self, dt):
         pass
@@ -381,7 +208,6 @@ class LiarPokerApp(App):
         game = Game()
         game.build()
         game.round_play()
-        #Clock.schedule_interval(game.update, 1.0 / 60.0)
         return game
 
 
