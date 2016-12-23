@@ -9,8 +9,10 @@ from kivy.uix.togglebutton import ToggleButton
 class CardSelector(FloatLayout):
     suit = None
     cardDict = {}
+    player = ""
 
     def build(self, board):
+        self.player = self.id[0:7]
         self.board = board
         self.cardDict = {1:'A', 10:'T', 11:'J', 12:'Q', 13:'K'}
         for i in range(2,10): self.cardDict[i] = str(i)
@@ -20,7 +22,7 @@ class CardSelector(FloatLayout):
             #print self.suit + str(int(self.ids.slider_id.value))
             card = self.cardDict[ (int(self.ids.slider_id.value)) ] + self.suit.lower()
 
-            self.board.on_player_lie(self.id, card)
+            self.board.on_player_lie(self.player, card)
 
     def _select_suit(self, suit):
         self.suit = suit

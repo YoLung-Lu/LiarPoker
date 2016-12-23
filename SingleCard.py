@@ -10,8 +10,14 @@ class SingleCard(FloatLayout):
         #print self.ids[w_id]
         pass
 
+    def click(self):
+        self.check.active = not self.check.active
+
     def uncheck(self):
         self.check.active = False
+
+    def do_check(self):
+        self.check.active = True
 
     def enable_check(self):
         if not self.check.parent:

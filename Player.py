@@ -7,12 +7,14 @@ class Player:
         self.bet = 0
         self.currentTurn = 1
         self.lie = False
+        self.caught = False
 
     def round_reset(self):
         self.hand = []
         self.bet = 0
         self.currentTurn = 1
         self.lie = False
+        self.caught = False
 
     def bet(self, betting):
         if betting < self.chip:

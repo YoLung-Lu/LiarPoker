@@ -17,6 +17,7 @@ class Game(FloatLayout):
     id = "root"
     turn = 1
     round = 0
+    testMode = True
 
     def _round_reset(self):
         # At the end of round, update data and views
@@ -27,8 +28,8 @@ class Game(FloatLayout):
         self.player[1].round_reset()
 
         # TODO: remove lie panel from playerbox
-        self.ids.player1_box.round_reset()
-        self.ids.player2_box.round_reset()
+        self.ids.player1_box.round_reset(self.testMode)
+        self.ids.player2_box.round_reset(self.testMode)
         self.board = []
 
     def build(self):
@@ -40,6 +41,7 @@ class Game(FloatLayout):
         self.player.append( Player(1) )
         # board stands for cards on board
         self.board = []
+
 
         # create view objects
         box = PlayerDeck_Bottom()
@@ -71,9 +73,24 @@ class Game(FloatLayout):
         self.ids.public_area.update_hand(self.board)
         self.ids.public_area.update_score(500, 500)
 
-        #self.round_finish()
+        #self.round_end()
 
-    def round_finish(self):
+    def round_end(self):
+        """
+        The end of a game round. Decide winner of the round and chip shift based on:
+            (1) If any lier caught
+            (2) Card score
+        """
+        # if lie caught
+        if self.player[0].caught and self.player[1].caught:
+            print "Draw due to double caught."
+        elif self.player[0].caught:
+            print "Player 2 wins on caught."
+        elif self.player[1].caught:
+            print "Player 1 wins on caught."
+        else:
+            print "No one caught"
+
         # evaluate cards
         self.player[0].cardScore = self.evaluator.evaluate(self.board, self.player[0].hand)
         self.player[0].rank = self.evaluator.get_rank_class(self.player[0].cardScore)
@@ -100,6 +117,11 @@ class Game(FloatLayout):
 
         self.ids.public_area.set_message("Round : " + str(self.round) +"\n" + roundMsg + "\nNew Round" )
 
+        # Remove suspect widget
+        # TODO: move 2 right place
+        self.ids.player1_box.round_end()
+        self.ids.player2_box.round_end()
+
     def on_player_confirm(self, boxid, thisPlayer, cardList, cardPicked = None):
         # There are 4 turns in a round of a game. Players must confirm there cards to finish the turn
         """
@@ -120,8 +142,8 @@ class Game(FloatLayout):
             if len(cardList) == 3 and self.player[thisPlayer].currentTurn == 1:
                 self.player[thisPlayer].reorderCard(cardList)
                 self.player[thisPlayer].currentTurn = 2
-                self.ids[boxid].update_turn(2)
-                self.ids[boxid].update_hand(self.player[thisPlayer].hand)
+                self.ids[boxid].update_turn(2, self.testMode)
+                self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
             if self.player[thisPlayer^1].currentTurn == 2:
                 # two players both finished turn 1
                 self.round_turn_1_end()
@@ -129,36 +151,51 @@ class Game(FloatLayout):
             if len(cardList) == 1 and self.player[thisPlayer].currentTurn == 2:
                 self.player[thisPlayer].reorderCard(cardList)
                 self.player[thisPlayer].currentTurn = 3
-                self.ids[boxid].update_turn(3)
-                self.ids[boxid].update_hand(self.player[thisPlayer].hand)
+                self.ids[boxid].update_turn(3, self.testMode)
+                self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
             if self.player[thisPlayer^1].currentTurn == 3:
                 # two players both finished turn 1
                 self.round_turn_2_end()
-        elif self.turn == 3:
+        elif self.turn == 3 and len(cardList) == 1 and self.player[thisPlayer].currentTurn == 3:
+            self.player[thisPlayer].reorderCard(cardList)
+            self.player[thisPlayer].currentTurn = 4
+            self.ids[boxid].update_turn(4, self.testMode)
+            self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
+            if self.player[thisPlayer^1].currentTurn == 4:
+                self.round_turn_3_end()
             # TODO: implement not lie flow
             pass
         elif self.turn == 4:
-            # TODO: implement not suspect flow
-            pass
-
+            self.player[thisPlayer].currentTurn = 5
+            if self.player[thisPlayer^1].currentTurn == 5:
+                self.round_end()
 
     def on_player_lie(self, player, card):
-        print str(player) + "made a lie to card: " + card
+        print str(player) + " made a lie to card: " + card
         card = Card.new(card)
-        pno = int(player[-1]) - 1
+        pno = int(player[6]) - 1
 
         if self.player[pno].hand[0] != card:
+            self.player[pno].lie = True
             self.player[pno].hand.pop(0)
             self.player[pno].hand.insert(0, card)
             self.player[pno].currentTurn = 4
-            self.ids[player+"_box"].update_turn(3)
-            self.ids[player+"_box"].update_hand(self.player[pno].hand)
+            self.ids[player+"_box"].update_turn(4, self.testMode)
+            self.ids[player+"_box"].update_hand(self.player[pno].hand, self.turn)
             if self.player[pno^1].currentTurn == 4:
                 self.round_turn_3_end()
 
-    def on_player_suspect(self, player):
-        print str(player) + "suspect his opponent lied."
-        pass
+    def on_player_suspect(self, *args):
+        print args[0] + " suspect his opponent lied."
+        player = args[0]
+        pno = int(args[0][-1])-1
+        if self.player[pno^1].lie:
+            self.player[pno^1].caught = True
+            print player + " caught his opponent lied"
+
+        self.player[pno].currentTurn = 5
+        if self.player[pno^1].currentTurn == 5:
+            self.round_end()
 
     def round_turn_1_end(self):
         self.turn = 2
@@ -170,24 +207,20 @@ class Game(FloatLayout):
         self.ids.player1_box.update_hand(self.player[0].hand, self.turn)
         self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
 
-        # set view for tell lie
-        self.ids.player1_box.add_lie_widget(self._create_liar_selector('player1'))
-        self.ids.player2_box.add_lie_widget(self._create_liar_selector('player2'))
+        # set widgets for tell lie
+        self.ids.player1_box.round_turn_2_end()
+        self.ids.player2_box.round_turn_2_end()
 
     def round_turn_3_end(self):
         self.turn = 4
         self.ids.player1_box.update_hand(self.player[0].hand, self.turn)
         self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
-        self.round_finish()
 
-    def round_turn_4_end(self):
-        pass
+        # Set suspect widgets for turn 4
+        self.ids.player1_box.round_turn_3_end()
+        self.ids.player2_box.round_turn_3_end()
 
-    def _create_liar_selector(self, player):
-        # create a card selector for players to tell lie
-        cs = CardSelector(id=player)
-        cs.build(self)
-        return cs
+        #self.round_end()
 
     def update(self, dt):
         pass

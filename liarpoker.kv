@@ -79,6 +79,11 @@
         #on_active: root.event_checkbox_selected()
         #on_press: root.get_widget_by_id('check')
 
+    Button:
+        size_hint: (1, .8)
+        pos_hint: {'x': 0, 'y': 0}
+        on_press: root.click()
+
     Label:
         id: la
         font_size: 15
