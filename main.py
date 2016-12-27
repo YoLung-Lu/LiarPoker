@@ -2,6 +2,7 @@ from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.label import Label
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.button import Button
@@ -43,18 +44,34 @@ class Game(FloatLayout):
         # board stands for cards on board
         self.board = []
 
+        # create scatter
+        scatter_but = ScatterLayout(do_rotation = False,do_translation = False,do_scale = False,
+            			size_hint = (1, 1),
+            			pos_hint = {'x': 0, 'y': 0},
+                        rotation = 0 )
+
+        scatter_top = ScatterLayout(do_rotation = False,do_translation = False,do_scale = False,
+                        size_hint = (1, 1),
+                        pos_hint = {'x': 0, 'y': 0},
+                        rotation = 180 )
+
 
         # create view objects
         box = PlayerDeck_Bottom()
-        box.init_deck()
-        box2 = PlayerDeck_Top()
-        box2.init_deck()
+        box.init_deck(self, "player1", 0)
+        box2 = PlayerDeck_Bottom()
+        box2.init_deck(self, "player2", 1)
         public_area = Public_Area()
         public_area.init_deck()
 
         # register view objects
-        self.add_widget(box)
-        self.add_widget(box2)
+        scatter_but.add_widget(box)
+        self.add_widget(scatter_but)
+
+        scatter_top.add_widget(box2)
+        self.add_widget(scatter_top)
+
+        #self.add_widget(box2)
         self.add_widget(public_area)
         self.ids[box.id] = box
         self.ids[box2.id] = box2
