@@ -7,6 +7,7 @@ from kivy.uix.checkbox import CheckBox
 from kivy.uix.button import Button
 from kivy.uix.slider import Slider
 from kivy.uix.togglebutton import ToggleButton
+from kivy.uix.image import Image
 from kivy.properties import NumericProperty, ReferenceListProperty,\
     ObjectProperty
 
@@ -75,6 +76,11 @@ class Game(FloatLayout):
 
         #self.round_end()
 
+    def test_image(self):
+        #img = Image(source='resource/Suspection.png', size_hint=(0.5,0.5) )
+        #self.add_widget(img)
+        pass
+
     def round_end(self):
         """
         The end of a game round. Decide winner of the round and chip shift based on:
@@ -88,6 +94,7 @@ class Game(FloatLayout):
             print "Player 2 wins on caught."
         elif self.player[1].caught:
             print "Player 1 wins on caught."
+            self.test_image()
         else:
             print "No one caught"
 
@@ -238,6 +245,7 @@ class Game(FloatLayout):
 
 class LiarPokerApp(App):
     def build(self):
+        # TODO: player class, player name, widget
         game = Game()
         game.build()
         game.round_play()
