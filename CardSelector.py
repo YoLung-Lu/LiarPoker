@@ -18,6 +18,8 @@ class CardSelector(FloatLayout):
         for i in range(2,10): self.cardDict[i] = str(i)
 
     def get_card(self):
+        # Player lies about his card and trigger event of board.
+        # TODO: trigger event of PlayerDeck instead of board
         if self.suit:
             #print self.suit + str(int(self.ids.slider_id.value))
             card = self.cardDict[ (int(self.ids.slider_id.value)) ] + self.suit.lower()

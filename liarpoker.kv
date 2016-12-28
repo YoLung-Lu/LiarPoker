@@ -28,27 +28,10 @@
         size_hint_y: 0.8
         on_press: root.press_new_round('but_public')
 
-
-<PlayerDeck_Top>:
+<PlayerDeck>:
     orientation: 'horizontal'
-    id: player2_box
-    size_hint: (0.8, 0.3)
-    pos_hint: {'top': 1, 'right': 1}
-
-    but_2: but_2
-
-    Button:
-        id: but_2
-        text: 'Confirm'
-        size_hint_y: 0.8
-        on_press: root.press_player_confirm()
-
-<PlayerDeck_Bottom>:
-    orientation: 'horizontal'
-    id: player1_box
-    size_hint: (0.8, 0.3)
+    size_hint: (1, 0.3)
     pos_hint: {'x': 0, 'y': 0}
-
 
 
 <SingleCard>:
@@ -159,3 +142,44 @@
         text: 'S'
         group: 'suit'
         on_press: root._select_suit('S')
+
+
+<BetSelector>:
+    pos: root.pos
+    size_hint: (1, 1)
+
+    canvas:
+        Color:
+            rgba: 1, 1, 0, 0.5
+        Rectangle:
+            pos: self.pos
+            size: self.size[0], self.size[1]*0.8
+
+    ToggleButton:
+        size_hint: (1, .2)
+        pos_hint: {'x': 0, 'y': 0}
+        text: 'Fold'
+        group: 'bet'
+        on_press: root._select_bet(3)
+
+    ToggleButton:
+        size_hint: (1, .2)
+        pos_hint: {'x': 0, 'y': 0.2}
+        text: 'Small bet'
+        state: 'down'
+        group: 'bet'
+        on_press: root._select_bet(2)
+
+    ToggleButton:
+        size_hint: (1, .2)
+        pos_hint: {'x': 0, 'y': 0.4}
+        text: 'Middle bet'
+        group: 'bet'
+        on_press: root._select_bet(1)
+
+    ToggleButton:
+        size_hint: (1, .2)
+        pos_hint: {'x': 0, 'y': 0.6}
+        text: 'Big bet'
+        group: 'bet'
+        on_press: root._select_bet(0)
