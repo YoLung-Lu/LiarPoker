@@ -3,7 +3,7 @@ class Player:
     def __init__(self, id):
         self.id = id
         self.hand = []
-        self.chip = 500
+        self.chip = 5500
         self.bet = 0
         self.currentTurn = 1
         self.lie = False

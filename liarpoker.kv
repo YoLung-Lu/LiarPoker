@@ -12,21 +12,23 @@
     size_hint: (1, 0.4)
     pos_hint: {'center_x': 0.5, 'y': 0.3}
 
-    but_public: but_public
+    Label:
+        id: info_label_id
+        text: "<< Information >>"
 
     Label:
-        id: player1_score
-        text: "Player 1" + "\n  " + "500"
+        id: chip_label_id
+        text: "<< Chip >>\n" + "Player 1: 500" + "\n" + "Player2: 500"
 
     Label:
-        id: player2_score
-        text: "Player 2" + "\n  " + "500"
+        id: bet_label_id
+        text: "<< BET >>\n\n"
 
     Button:
-        id: but_public
+        id: public_button_id
         text: 'New Round'
         size_hint_y: 0.8
-        on_press: root.press_new_round('but_public')
+        on_press: root.press_new_round()
 
 <PlayerDeck>:
     orientation: 'horizontal'
@@ -60,16 +62,24 @@
         pos_hint: {'x': 0, 'y': 0}
         on_press: root.click()
 
-    Label:
-        id: la
-        font_size: 15
+    Widget:
         size_hint: (.2, 0.1)
         pos_hint: {'x': .1, 'y': 0.65}
-        #pos_hint:{'x':0.1, 'y':1}
-        #pos: (self.pos[0]+10), (self.pos[1]+10 )
-        #center_x: self.width / 4
-        #pos_hint: {'x': .1, 'y': .9}
-        text: ""
+
+        ScatterLayout:
+            pos: self.parent.pos
+            size: self.parent.size
+            rotation: 180
+
+            Label:
+                id: la
+                font_size: 15
+                size: 20, 20
+                pos: self.parent.x, self.parent.y
+                #size_hint: (.2, 0.1)
+                #pos_hint: {'x': .1, 'y': 0.65}
+                #pos: 0, 0
+                text: ""
 
     Label:
         id: lb

@@ -53,8 +53,8 @@ class Game(FloatLayout):
         self.player[1].round_reset()
 
         # TODO: remove lie panel from playerbox
-        self.ids.player1_box.round_reset(self.testMode)
-        self.ids.player2_box.round_reset(self.testMode)
+        self.ids.player1_box.round_reset()
+        self.ids.player2_box.round_reset()
         self.board.round_reset()
 
     def build(self, testMode = True):
@@ -87,9 +87,9 @@ class Game(FloatLayout):
                         rotation = 180 )
 
         box = PlayerDeck()
-        box.init_deck(self, "player1", 0)
+        box.init_deck(self, "player1", 0, self.testMode)
         box2 = PlayerDeck()
-        box2.init_deck(self, "player2", 1)
+        box2.init_deck(self, "player2", 1, self.testMode)
         public_area = Public_Area()
         public_area.init_deck()
 
@@ -109,6 +109,7 @@ class Game(FloatLayout):
         A game round starts here.
         """
         self._round_reset()
+        self.ids.public_area.update_round(self.round)
 
         # draw cards for players and board
         self.player[0].hand = self.deck.draw(5)
@@ -121,7 +122,7 @@ class Game(FloatLayout):
         self.ids.public_area.update_hand(self.board.get_cards())
 
         # TODO: fix bet
-        self.ids.public_area.update_score(500, 500)
+        self.ids.public_area.set_chip_info(self.player[0].chip, self.player[1].chip)
 
     def test_image(self):
         #img = Image(source='resource/Suspection.png', size_hint=(0.5,0.5) )
@@ -193,32 +194,33 @@ class Game(FloatLayout):
                 -> decide winner and odds
         """
         # TODO: no betting process
-        print "Cards: " + str(cardList)
+        if self.testMode:
+            print "Player " + str(thisPlayer+1) + " Cards: " + str(cardList)
 
         if self.turn == 1:
             # check if 3 cards selected
             if len(cardList) == 3 and self.player[thisPlayer].currentTurn == 1:
                 self.player[thisPlayer].reorderCard(cardList)
                 self.player[thisPlayer].currentTurn = 2
-                self.ids[boxid].update_turn(2, self.testMode)
-                self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
-
+                self.ids[boxid].update_turn(2)
+                #self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
                 # if other player already end turn, this turn is end
                 if self.player[thisPlayer^1].currentTurn == 2:
                     self.round_turn_1_end()
+
         elif self.turn == 2:
             if len(cardList) == 1 and self.player[thisPlayer].currentTurn == 2:
                 self.player[thisPlayer].reorderCard(cardList)
                 self.player[thisPlayer].currentTurn = 3
-                self.ids[boxid].update_turn(3, self.testMode)
-                self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
+                self.ids[boxid].update_turn(3)
+                #self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
                 if self.player[thisPlayer^1].currentTurn == 3:
                     self.round_turn_2_end()
         elif self.turn == 3 and len(cardList) == 1 and self.player[thisPlayer].currentTurn == 3:
             self.player[thisPlayer].reorderCard(cardList)
             self.player[thisPlayer].currentTurn = 4
-            self.ids[boxid].update_turn(4, self.testMode)
-            self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
+            self.ids[boxid].update_turn(4)
+            #self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
             if self.player[thisPlayer^1].currentTurn == 4:
                 self.round_turn_3_end()
 
@@ -241,7 +243,7 @@ class Game(FloatLayout):
             self.player[pno].hand.pop(0)
             self.player[pno].hand.insert(0, card)
             self.player[pno].currentTurn = 4
-            self.ids[player+"_box"].update_turn(4, self.testMode)
+            self.ids[player+"_box"].update_turn(4)
             self.ids[player+"_box"].update_hand(self.player[pno].hand, self.turn)
             if self.player[pno^1].currentTurn == 4:
                 self.round_turn_3_end()
@@ -264,6 +266,8 @@ class Game(FloatLayout):
         self.ids.player1_box.update_hand(self.player[0].hand, self.turn)
         self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
 
+        self.ids.public_area.update_turn(self.turn)
+
     def round_turn_2_end(self):
         print ">> turn 2 end"
         self.turn = 3
@@ -273,6 +277,8 @@ class Game(FloatLayout):
         # set widgets for tell lie
         self.ids.player1_box.round_turn_2_end()
         self.ids.player2_box.round_turn_2_end()
+
+        self.ids.public_area.update_turn(self.turn)
 
     def round_turn_3_end(self):
         print ">> turn 3 end"
@@ -284,7 +290,10 @@ class Game(FloatLayout):
         self.ids.player1_box.round_turn_3_end()
         self.ids.player2_box.round_turn_3_end()
 
-        #self.round_end()
+        self.ids.public_area.update_turn(self.turn)
+
+    def get_turn(self):
+        return self.turn
 
     def update(self, dt):
         pass
@@ -295,18 +304,14 @@ class Game(FloatLayout):
 
         self.round_play()
 
-    def press_player_confirm(self, instance):
-        # players confirm deck
-        #print instance.id
-        pass
-
 class LiarPokerApp(App):
     def build(self):
         """
         TODO:
             1. Betting
             2. End game strategy
-            3. Single card rotation (label a)
+            3. BUG: rearrange sequence of cards "AFTER" turn end
+            4. Flow problem (potential bug): end game using button before turn 5
         """
         game = Game()
         game.build()

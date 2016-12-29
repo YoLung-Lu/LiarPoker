@@ -14,14 +14,16 @@ from BetSelector import BetSelector
 class PlayerDeck(BoxLayout):
     widget_storage = {}
 
-    def init_deck(self, parent, pname = "player1", pno = 0):
+    def init_deck(self, parent, pname, pno, testMode):
         #b = self.children[0]
         #self.remove_widget(b)
         #self.remove_widget(self.children[0])
+        self.root = parent
         self.name = pname
         self.no = pno
-        self.root = parent
+        self.testMode = testMode
         self.id = pname + "_box"
+        self.turn = 0
 
         # betting strategy decided by "BetSelector"
         self.bet = 1
@@ -29,6 +31,7 @@ class PlayerDeck(BoxLayout):
         # register 5 cards
         for i in range(5):
             c = SingleCard(id = self.name + '_card' + str(i))
+            #c.la.pos = (20, 0)
             self.ids[c.id] = c
             self.add_widget(c)
             self.add_widget(Widget(size_hint= (0.01, 1)) )
@@ -39,32 +42,33 @@ class PlayerDeck(BoxLayout):
         self._add_bet_widget()
         self._add_empty_widget()
 
-
-    def round_reset(self, testMode = False):
+    def round_reset(self):
         for i in range(5):
             self.ids[self.name + '_card'+str(i)].enable_check()
             self.ids[self.name + '_card'+str(i)].la.text = ""
-            if testMode and i>1:
+            if self.testMode and i > 1:
                 self.ids[self.name + '_card'+str(i)].do_check()
             else:
                 self.ids[self.name + '_card'+str(i)].uncheck()
 
     def update_hand(self, hand, turn = 1):
         # input hand of player, update to widget base on current turn
-        openCardIndex={1:5, 2:1, 3:0, 4:-1}
+        openCardIndex = {1:5, 2:1, 3:0, 4:-1}
         for i in range(5):
             self.ids[self.name + '_card'+str(i)].lb.text = Card.int_to_pretty_str( hand[i] )
             if i > openCardIndex[turn]:
                 self.ids[self.name + '_card'+str(i)].la.text = Card.int_to_pretty_str( hand[i] )
 
-    def update_turn(self, turn, testMode = False):
-        # cancel selection and remove last 3 checkbox
-        openCardIndex={1:5, 2:1, 3:0, 4:-1}
+    def update_turn(self, turn):
+        # Cards revealed after each turn
+        # Also, checkboxs for revealed cards are removed.
+        self.turn = turn
+        openCardIndex = {1:5, 2:1, 3:0, 4:-1}
         for i in range(5):
             self.ids[self.name + '_card'+str(i)].uncheck()
             if i > openCardIndex[turn]:
                 self.ids[self.name + '_card'+str(i)].disable_check()
-            elif testMode and i == openCardIndex[turn]:
+            elif self.testMode and i == openCardIndex[turn]:
                 self.ids[self.name + '_card'+str(i)].do_check()
 
         if turn == 3:
@@ -73,12 +77,21 @@ class PlayerDeck(BoxLayout):
     def set_button_message(self, msg):
         self.ids[self.name + "_but_confirm"].text = msg
 
+    def insert_button_message(self, msg):
+        m = self.ids[self.name + "_but_confirm"].text
+        self.ids[self.name + "_but_confirm"].text = m + "\n" + msg
+
     def press_player_suspect(self, *kargs):
         self.root.on_player_suspect(self.name)
 
     def press_player_confirm(self, *kargs):
         # Notify the selected cards
         #print self.id
+
+        # Check if other player done current turn
+        if self.root.get_turn() < self.turn:
+            self.insert_button_message("Please wait ...")
+
         pickedCards = []
         for i in range(5):
             if self.ids[self.name + '_card'+str(i)].is_checkbox_active():
