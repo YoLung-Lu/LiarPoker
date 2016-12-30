@@ -2,18 +2,15 @@
 class Player:
     def __init__(self, id):
         self.id = id
-        self.hand = []
-        self.chip = 5500
-        self.bet = 0
-        self.currentTurn = 1
-        self.lie = False
-        self.caught = False
-
+        self.chip = 500
+        self.round_reset()
+        
     def round_reset(self):
         self.hand = []
         self.bet = 0
         self.currentTurn = 1
         self.lie = False
+        self.suspect = False
         self.caught = False
 
     def bet(self, betting):

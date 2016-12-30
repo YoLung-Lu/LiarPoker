@@ -5,3 +5,4 @@ from Public_Area import Public_Area
 from PlayerDeck import PlayerDeck
 from SingleCard import SingleCard
 from Player import Player
+from Board import Board

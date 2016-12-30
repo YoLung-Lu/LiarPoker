@@ -9,6 +9,7 @@ class Public_Area(BoxLayout):
     id = "public_area"
     round = 1
     turn = 1
+    betString = {0:"Large bet", 1:"Middle bet", 2:"Small bet", 3:"Fold"}
 
 
     def init_deck(self):
@@ -25,14 +26,15 @@ class Public_Area(BoxLayout):
             # space between cards
             self.add_widget(Widget(size_hint= (0.01, 1)), index = 2 )
 
+        print self.y
+        print self.ids.info_label_id.top
+
     def update_turn(self, turn):
         self.turn = turn
-        self.set_info()
 
     def update_round(self, round):
         self.round = round
         self.turn  = 1
-        self.set_info()
 
     def update_hand(self, hand):
         self.ids.public_card0.la.text = Card.int_to_pretty_str( hand[0] )
@@ -46,14 +48,17 @@ class Public_Area(BoxLayout):
         info = info + msg
         self.ids['info_label_id'].text = info
 
-    def set_chip_info(self, c1, c2):
-        info = "<< Chip >>\n"
-        info = info + "Player1: " + str(c1)  + "\n" + "Player2: " + str(c2)
+    def set_chip_info(self, c1, c2, bonus):
+        info = "<< Chip >>\n" + \
+               "Player1: " + str(c1)  + "\n" + "Player2: " + str(c2) + "\n" +\
+               "Bonus: " + str(bonus)
         self.ids['chip_label_id'].text = info
 
-    def set_bet_info(self, c1, c2):
-        info = "<< Bet >>\n"
-        info = info + "Player1: " + str(c1)  + "\n" + "Player2: " + str(c2)
+    def set_bet_info(self, b1, b2, avgBet, chip):
+        info = "<< Bet >>\n" + \
+               "Player1: " + self.betString[b1]  + "\n" + "Player2: " + self.betString[b2] + "\n" + \
+               self.betString[avgBet] +"\n" + \
+               "Chip: " + str(chip)
         self.ids['bet_label_id'].text = info
 
     def set_message(self, msg):

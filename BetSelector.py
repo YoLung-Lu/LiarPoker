@@ -9,7 +9,7 @@ from kivy.uix.togglebutton import ToggleButton
 class BetSelector(FloatLayout):
     """
         For player to select his betting strategy in four choices:
-            0. Big bet
+            0. Large bet
             1. Middle bet
             2. Small bet
             3. Fold (Give away the round)

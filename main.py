@@ -15,29 +15,7 @@ from kivy.properties import NumericProperty, ReferenceListProperty,\
 from __init__ import *
 
 
-class Board:
-    cards = []
-    betting = 0
 
-    def set_cards(self, cards):
-        self.cards = cards
-
-    def set_msg(self, msg):
-        pass
-
-    def set_bet(self, bet):
-        self.betting = bet
-
-    def get_cards(self):
-        return self.cards
-
-    def get_bet(self):
-        return self.bet
-
-    def round_reset(self):
-        self.cards = []
-        #self.betting = 0
-        pass
 
 class Game(FloatLayout):
     id = "root"
@@ -56,6 +34,7 @@ class Game(FloatLayout):
         self.ids.player1_box.round_reset()
         self.ids.player2_box.round_reset()
         self.board.round_reset()
+
 
     def build(self, testMode = True):
         """
@@ -122,12 +101,8 @@ class Game(FloatLayout):
         self.ids.public_area.update_hand(self.board.get_cards())
 
         # TODO: fix bet
-        self.ids.public_area.set_chip_info(self.player[0].chip, self.player[1].chip)
-
-    def test_image(self):
-        #img = Image(source='resource/Suspection.png', size_hint=(0.5,0.5) )
-        #self.add_widget(img)
-        pass
+        self.ids.public_area.set_chip_info(self.player[0].chip, self.player[1].chip, self.board.bonus)
+        self.ids.public_area.set_info( self.board.get_bet_string(self.turn) )
 
     def round_end(self):
         """
@@ -137,36 +112,83 @@ class Game(FloatLayout):
         """
         self.turn = 5
 
-        # if lier caught
-        if self.player[0].caught and self.player[1].caught:
-            print "Draw due to double caught."
-        elif self.player[0].caught:
-            print "Player 2 wins on caught."
-        elif self.player[1].caught:
-            print "Player 1 wins on caught."
-            self.test_image()
-        else:
-            print "No one caught"
-
-
-        # evaluate cards
+        ''' Evaluation card rank '''
         self.player[0].cardScore = self.evaluator.evaluate(self.board.get_cards(), self.player[0].hand)
-        self.player[0].rank = self.evaluator.get_rank_class(self.player[0].cardScore)
-
         self.player[1].cardScore = self.evaluator.evaluate(self.board.get_cards(), self.player[1].hand)
+        self.player[0].rank = self.evaluator.get_rank_class(self.player[0].cardScore)
         self.player[1].rank = self.evaluator.get_rank_class(self.player[1].cardScore)
 
+        ''' Card winner '''
+        cardWinner = 1
+        if self.player[0].cardScore < self.player[1].cardScore:
+            cardWinner = 0 # Player1
+
+        ''' Decide chip gain rate for winner, loser and board '''
+        winnerRate = 1.0    # The chip to handover to the card winner
+        loserRate = 0.0     # The chip to handover to the card loser
+        maintainRate = 0.0  # The chip left on the table
+
+        if self.player[cardWinner].caught and self.player[cardWinner^1].caught:
+            # Both of players lied, and caught.
+            print "Draw due to double caught."
+            winnerRate, maintainRate, loserRate = 0, 1, 0
+        elif self.player[cardWinner].caught:
+            # Only winner caught
+            if self.player[cardWinner].suspect:
+                winnerRate, maintainRate, loserRate = -1, 1.5, 0.5
+            else:
+                winnerRate, maintainRate, loserRate = -0.5, 1, 0.5
+        elif self.player[cardWinner^1].caught:
+            # Only loser caught
+            if self.player[cardWinner^1].suspect:
+                winnerRate, maintainRate, loserRate = 1.5, 0.5, -1
+            else:
+                winnerRate, maintainRate, loserRate = 1.5, 0, -0.5
+        else:
+            print "No one caught"
+            winnerRate, maintainRate, loserRate = 1, 0, 0
+            if self.player[cardWinner].suspect:
+                winnerRate -= 0.5
+                maintainRate += 0.5
+            if self.player[cardWinner^1].suspect:
+                loserRate -= 0.5
+                maintainRate += 0.5
+
+        """
+                    Winner   Host    Loser
+        winnerPrize       <--1.0            ( Stay at host if winner caught )
+        LieCost       0.5 <--------> 0.5    ( Pay to opponent if caught )
+        SuspectCost   0.5->        <-0.5    ( Pay to host if suspect not stand )
+        """
+
+        ''' Calculate chip gain '''
+        stacks = self.board.totalChip
+        bonus  = self.board.bonus
+
+        self.player[cardWinner].chip += int(stacks * winnerRate)
+        self.player[cardWinner^1].chip += int(stacks * loserRate)
+
+        if winnerRate > 0: # winner gets bonus
+            self.player[cardWinner].chip += bonus
+            bonus = stacks * maintainRate
+        elif winnerRate < 0 and loserRate > 0: # loser gets bonus
+            self.player[cardWinner^1].chip += bonus
+            bonus = stacks * maintainRate
+        else: # no one gets bonus due to double caught
+            bonus = bonus + stacks * maintainRate
+
+        self.board.set_bonus(int(bonus))
+        self.board.round_end()
+
+        # print cards for check
+        print winnerRate, maintainRate, loserRate
         print '*'*50
         print "GAME RESULT:"
         print "Player 1 hand rank = %d (%s)\n" % (self.player[0].cardScore, self.player[0].rank)
         print "Player 2 hand rank = %d (%s)\n" % (self.player[1].cardScore, self.player[1].rank)
-        #evaluator.class_to_string(p1_class)
 
-        roundMsg = ""
-        if self.player[0].cardScore < self.player[1].cardScore:
-            roundMsg = "Player1 wins"
-        else:
-            roundMsg = "Player2 wins"
+        roundMsg = "Player " + str(cardWinner + 1) + " wins."
+        print roundMsg
         print '*'*50
 
         # temply shows card rank here
@@ -201,6 +223,7 @@ class Game(FloatLayout):
             # check if 3 cards selected
             if len(cardList) == 3 and self.player[thisPlayer].currentTurn == 1:
                 self.player[thisPlayer].reorderCard(cardList)
+                self.player[thisPlayer].bet = bet
                 self.player[thisPlayer].currentTurn = 2
                 self.ids[boxid].update_turn(2)
                 #self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
@@ -211,6 +234,7 @@ class Game(FloatLayout):
         elif self.turn == 2:
             if len(cardList) == 1 and self.player[thisPlayer].currentTurn == 2:
                 self.player[thisPlayer].reorderCard(cardList)
+                self.player[thisPlayer].bet = bet
                 self.player[thisPlayer].currentTurn = 3
                 self.ids[boxid].update_turn(3)
                 #self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
@@ -218,6 +242,7 @@ class Game(FloatLayout):
                     self.round_turn_2_end()
         elif self.turn == 3 and len(cardList) == 1 and self.player[thisPlayer].currentTurn == 3:
             self.player[thisPlayer].reorderCard(cardList)
+            self.player[thisPlayer].bet = bet
             self.player[thisPlayer].currentTurn = 4
             self.ids[boxid].update_turn(4)
             #self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
@@ -252,6 +277,7 @@ class Game(FloatLayout):
         print args[0] + " suspect his opponent lied."
         player = args[0]
         pno = int(args[0][-1])-1
+        self.player[pno].suspect = True
         if self.player[pno^1].lie:
             self.player[pno^1].caught = True
             print player + " caught his opponent lied"
@@ -262,14 +288,33 @@ class Game(FloatLayout):
 
     def round_turn_1_end(self):
         print ">> turn 1 end"
+        bet, chip = self.board.set_bet(self.turn, self.player[0].bet, self.player[1].bet)
+        #set_bet_info
+        # TODO: chip < 0
+        self.ids.public_area.set_bet_info( self.player[0].bet, self.player[1].bet, bet, chip)
+        self.ids.public_area.update_turn(self.turn)
+        self.ids.public_area.set_info( self.board.get_bet_string(self.turn) )
+
+        self.player[0].chip -= chip
+        self.player[1].chip -= chip
+
         self.turn = 2
         self.ids.player1_box.update_hand(self.player[0].hand, self.turn)
         self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
 
-        self.ids.public_area.update_turn(self.turn)
 
     def round_turn_2_end(self):
         print ">> turn 2 end"
+        bet, chip = self.board.set_bet(self.turn, self.player[0].bet, self.player[1].bet)
+        #set_bet_info
+        # TODO: chip < 0
+        self.ids.public_area.set_bet_info( self.player[0].bet, self.player[1].bet, bet, chip)
+        self.ids.public_area.update_turn(self.turn)
+        self.ids.public_area.set_info( self.board.get_bet_string(self.turn) )
+
+        self.player[0].chip -= chip
+        self.player[1].chip -= chip
+
         self.turn = 3
         self.ids.player1_box.update_hand(self.player[0].hand, self.turn)
         self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
@@ -278,10 +323,18 @@ class Game(FloatLayout):
         self.ids.player1_box.round_turn_2_end()
         self.ids.player2_box.round_turn_2_end()
 
-        self.ids.public_area.update_turn(self.turn)
-
     def round_turn_3_end(self):
         print ">> turn 3 end"
+        bet, chip = self.board.set_bet(self.turn, self.player[0].bet, self.player[1].bet)
+        #set_bet_info
+        # TODO: chip < 0
+        self.ids.public_area.set_bet_info( self.player[0].bet, self.player[1].bet, bet, chip)
+        self.ids.public_area.update_turn(self.turn)
+        self.ids.public_area.set_info( self.board.get_bet_string(self.turn) )
+
+        self.player[0].chip -= chip
+        self.player[1].chip -= chip
+
         self.turn = 4
         self.ids.player1_box.update_hand(self.player[0].hand, self.turn)
         self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
@@ -289,8 +342,6 @@ class Game(FloatLayout):
         # Set suspect widgets for turn 4
         self.ids.player1_box.round_turn_3_end()
         self.ids.player2_box.round_turn_3_end()
-
-        self.ids.public_area.update_turn(self.turn)
 
     def get_turn(self):
         return self.turn
@@ -304,14 +355,20 @@ class Game(FloatLayout):
 
         self.round_play()
 
+    def test_image(self):
+        #img = Image(source='resource/Suspection.png', size_hint=(0.5,0.5) )
+        #self.add_widget(img)
+        pass
+
 class LiarPokerApp(App):
     def build(self):
         """
         TODO:
             1. Betting
             2. End game strategy
-            3. BUG: rearrange sequence of cards "AFTER" turn end
+            3. Player drop out
             4. Flow problem (potential bug): end game using button before turn 5
+            5.
         """
         game = Game()
         game.build()
