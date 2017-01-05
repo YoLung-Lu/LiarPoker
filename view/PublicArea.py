@@ -5,8 +5,8 @@ from kivy.uix.widget import Widget
 from deuces import Card, Evaluator, Deck
 from kivy.uix.label import Label
 
-class Public_Area(BoxLayout):
-    id = "public_area"
+class PublicArea(BoxLayout):
+    id = "publicArea"
     round = 1
     turn = 1
     betString = {0:"Large bet", 1:"Middle bet", 2:"Small bet", 3:"Fold"}

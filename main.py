@@ -12,17 +12,20 @@ from kivy.uix.image import Image
 from kivy.properties import NumericProperty, ReferenceListProperty,\
     ObjectProperty
 
-from __init__ import *
+from view import BetSelector, CardSelector, PlayerDeck, PublicArea, SingleCard
+from model import GameFlow, Board, Player
+from deuces import Card, Evaluator, Deck
+from abc import ABCMeta
 
 
-
-
-class Game(FloatLayout):
+class Game(GameFlow, FloatLayout):
+    # give the type of game to a self-created type inheritence from both "FloatLayout" and "ABCMeta"
+    __metaclass__ = type( 'GameMeta', (type(FloatLayout), ABCMeta), {})
     id = "root"
     turn = 1
     round = 0
 
-    def _round_reset(self):
+    def round_reset(self):
         # At the end of round, update data and views
         self.turn = 1
         self.round += 1
@@ -69,26 +72,26 @@ class Game(FloatLayout):
         box.init_deck(self, "player1", 0, self.testMode)
         box2 = PlayerDeck()
         box2.init_deck(self, "player2", 1, self.testMode)
-        public_area = Public_Area()
-        public_area.init_deck()
+        publicArea = PublicArea()
+        publicArea.init_deck()
 
         scatter_but.add_widget(box)
         self.add_widget(scatter_but)
         scatter_top.add_widget(box2)
         self.add_widget(scatter_top)
-        self.add_widget(public_area)
+        self.add_widget(publicArea)
 
         # register view objects
         self.ids[box.id] = box
         self.ids[box2.id] = box2
-        self.ids[public_area.id] = public_area
+        self.ids[publicArea.id] = publicArea
 
     def round_play(self):
         """
         A game round starts here.
         """
-        self._round_reset()
-        self.ids.public_area.update_round(self.round)
+        self.round_reset()
+        self.ids.publicArea.update_round(self.round)
 
         # draw cards for players and board
         self.player[0].hand = self.deck.draw(5)
@@ -98,11 +101,11 @@ class Game(FloatLayout):
         # update view
         self.ids.player1_box.update_hand(self.player[0].hand)
         self.ids.player2_box.update_hand(self.player[1].hand)
-        self.ids.public_area.update_hand(self.board.get_cards())
+        self.ids.publicArea.update_hand(self.board.get_cards())
 
         # TODO: fix bet
-        self.ids.public_area.set_chip_info(self.player[0].chip, self.player[1].chip, self.board.bonus)
-        self.ids.public_area.set_info( self.board.get_bet_string(self.turn) )
+        self.ids.publicArea.set_chip_info(self.player[0].chip, self.player[1].chip, self.board.bonus)
+        self.ids.publicArea.set_info( self.board.get_bet_string(self.turn) )
 
     def round_end(self):
         """
@@ -195,7 +198,7 @@ class Game(FloatLayout):
         self.ids.player1_box.set_button_message( self.evaluator.class_to_string(self.player[0].rank ))
         self.ids.player2_box.set_button_message( self.evaluator.class_to_string(self.player[1].rank ))
 
-        self.ids.public_area.set_message("Round : " + str(self.round) +"\n" + roundMsg + "\nNew Round" )
+        self.ids.publicArea.set_message("Round : " + str(self.round) +"\n" + roundMsg + "\nNew Round" )
 
         # Remove suspect widget
         # TODO: move 2 right place
@@ -229,7 +232,7 @@ class Game(FloatLayout):
                 #self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
                 # if other player already end turn, this turn is end
                 if self.player[thisPlayer^1].currentTurn == 2:
-                    self.round_turn_1_end()
+                    self.turn_1_end()
 
         elif self.turn == 2:
             if len(cardList) == 1 and self.player[thisPlayer].currentTurn == 2:
@@ -239,7 +242,7 @@ class Game(FloatLayout):
                 self.ids[boxid].update_turn(3)
                 #self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
                 if self.player[thisPlayer^1].currentTurn == 3:
-                    self.round_turn_2_end()
+                    self.turn_2_end()
         elif self.turn == 3 and len(cardList) == 1 and self.player[thisPlayer].currentTurn == 3:
             self.player[thisPlayer].reorderCard(cardList)
             self.player[thisPlayer].bet = bet
@@ -247,7 +250,7 @@ class Game(FloatLayout):
             self.ids[boxid].update_turn(4)
             #self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
             if self.player[thisPlayer^1].currentTurn == 4:
-                self.round_turn_3_end()
+                self.turn_3_end()
 
         elif self.turn == 4:
             self.player[thisPlayer].currentTurn = 5
@@ -271,7 +274,7 @@ class Game(FloatLayout):
             self.ids[player+"_box"].update_turn(4)
             self.ids[player+"_box"].update_hand(self.player[pno].hand, self.turn)
             if self.player[pno^1].currentTurn == 4:
-                self.round_turn_3_end()
+                self.turn_3_end()
 
     def on_player_suspect(self, *args):
         print args[0] + " suspect his opponent lied."
@@ -286,14 +289,14 @@ class Game(FloatLayout):
         if self.player[pno^1].currentTurn == 5:
             self.round_end()
 
-    def round_turn_1_end(self):
+    def turn_1_end(self):
         print ">> turn 1 end"
         bet, chip = self.board.set_bet(self.turn, self.player[0].bet, self.player[1].bet)
         #set_bet_info
         # TODO: chip < 0
-        self.ids.public_area.set_bet_info( self.player[0].bet, self.player[1].bet, bet, chip)
-        self.ids.public_area.update_turn(self.turn)
-        self.ids.public_area.set_info( self.board.get_bet_string(self.turn) )
+        self.ids.publicArea.set_bet_info( self.player[0].bet, self.player[1].bet, bet, chip)
+        self.ids.publicArea.update_turn(self.turn)
+        self.ids.publicArea.set_info( self.board.get_bet_string(self.turn) )
 
         self.player[0].chip -= chip
         self.player[1].chip -= chip
@@ -303,14 +306,14 @@ class Game(FloatLayout):
         self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
 
 
-    def round_turn_2_end(self):
+    def turn_2_end(self):
         print ">> turn 2 end"
         bet, chip = self.board.set_bet(self.turn, self.player[0].bet, self.player[1].bet)
         #set_bet_info
         # TODO: chip < 0
-        self.ids.public_area.set_bet_info( self.player[0].bet, self.player[1].bet, bet, chip)
-        self.ids.public_area.update_turn(self.turn)
-        self.ids.public_area.set_info( self.board.get_bet_string(self.turn) )
+        self.ids.publicArea.set_bet_info( self.player[0].bet, self.player[1].bet, bet, chip)
+        self.ids.publicArea.update_turn(self.turn)
+        self.ids.publicArea.set_info( self.board.get_bet_string(self.turn) )
 
         self.player[0].chip -= chip
         self.player[1].chip -= chip
@@ -323,14 +326,14 @@ class Game(FloatLayout):
         self.ids.player1_box.round_turn_2_end()
         self.ids.player2_box.round_turn_2_end()
 
-    def round_turn_3_end(self):
+    def turn_3_end(self):
         print ">> turn 3 end"
         bet, chip = self.board.set_bet(self.turn, self.player[0].bet, self.player[1].bet)
         #set_bet_info
         # TODO: chip < 0
-        self.ids.public_area.set_bet_info( self.player[0].bet, self.player[1].bet, bet, chip)
-        self.ids.public_area.update_turn(self.turn)
-        self.ids.public_area.set_info( self.board.get_bet_string(self.turn) )
+        self.ids.publicArea.set_bet_info( self.player[0].bet, self.player[1].bet, bet, chip)
+        self.ids.publicArea.update_turn(self.turn)
+        self.ids.publicArea.set_info( self.board.get_bet_string(self.turn) )
 
         self.player[0].chip -= chip
         self.player[1].chip -= chip
