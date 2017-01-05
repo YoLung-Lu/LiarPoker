@@ -41,6 +41,7 @@
     pos: root.pos
     la: la
     lb: lb
+    image_top_id: image_top_id
     check: check
 
     canvas:
@@ -63,6 +64,7 @@
         on_press: root.click()
 
     Widget:
+        id: image_top_id
         size_hint: (.2, 0.1)
         pos_hint: {'x': .1, 'y': 0.65}
 
@@ -70,25 +72,28 @@
             pos: self.parent.pos
             size: self.parent.size
             rotation: 180
+            do_rotation: False
+            do_translation: False
+            do_scale: False
 
             Label:
                 id: la
-                font_size: 15
+                #font_size: 20
                 size: 20, 20
                 pos: self.parent.x, self.parent.y
-                #size_hint: (.2, 0.1)
-                #pos_hint: {'x': .1, 'y': 0.65}
-                #pos: 0, 0
                 text: ""
+
+                Image:
+                    pos: self.parent.x + 20, self.parent.y
+                    size: 25, 25
+                    color: [0,0,0,0]
+                    #source: "resource/club.png"
 
     Label:
         id: lb
-        font_size: 15
+        #font_size: 20
         size_hint: (.2, 0.1)
         pos_hint: {'x': .7, 'y': 0.05}
-        #pos:10, 10
-        #center_x: self.width / 4 * 3
-        #pos_hint: {'x': .9, 'y': .1}
         text: ""
 
 

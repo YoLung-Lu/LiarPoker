@@ -26,9 +26,6 @@ class Public_Area(BoxLayout):
             # space between cards
             self.add_widget(Widget(size_hint= (0.01, 1)), index = 2 )
 
-        print self.y
-        print self.ids.info_label_id.top
-
     def update_turn(self, turn):
         self.turn = turn
 
@@ -37,10 +34,14 @@ class Public_Area(BoxLayout):
         self.turn  = 1
 
     def update_hand(self, hand):
-        self.ids.public_card0.la.text = Card.int_to_pretty_str( hand[0] )
-        self.ids.public_card0.lb.text = self.ids.public_card0.la.text
-        self.ids.public_card1.la.text = Card.int_to_pretty_str( hand[1] )
-        self.ids.public_card1.lb.text = self.ids.public_card1.la.text
+        for i in range(2):
+            card = Card.int_to_str(hand[i])
+            self.ids["public_card" + str(i)].set_card(card[0], card[1])
+            self.ids["public_card" + str(i)].show_card_to_all()
+        #self.ids.public_card0.la.text = Card.int_to_pretty_str( hand[0] )
+        #self.ids.public_card0.lb.text = self.ids.public_card0.la.text
+        #self.ids.public_card1.la.text = Card.int_to_pretty_str( hand[1] )
+        #self.ids.public_card1.lb.text = self.ids.public_card1.la.text
 
     def set_info(self, msg = ""):
         info = "<< Information >>\n"
