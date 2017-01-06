@@ -17,15 +17,12 @@ class GameFlow:
         """
         pass
 
-    @abstractmethod
     def turn_1_end(self):
         pass
 
-    @abstractmethod
     def turn_2_end(self):
         pass
 
-    @abstractmethod
     def turn_3_end(self):
         pass
 

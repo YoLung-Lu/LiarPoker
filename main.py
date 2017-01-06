@@ -1,16 +1,7 @@
 from kivy.app import App
-from kivy.uix.widget import Widget
-from kivy.uix.boxlayout import BoxLayout
+
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.scatterlayout import ScatterLayout
-from kivy.uix.label import Label
-from kivy.uix.checkbox import CheckBox
-from kivy.uix.button import Button
-from kivy.uix.slider import Slider
-from kivy.uix.togglebutton import ToggleButton
-from kivy.uix.image import Image
-from kivy.properties import NumericProperty, ReferenceListProperty,\
-    ObjectProperty
 
 from view import BetSelector, CardSelector, PlayerDeck, PublicArea, SingleCard
 from model import GameFlow, Board, Player
@@ -26,24 +17,26 @@ class Game(GameFlow, FloatLayout):
     round = 0
 
     def round_reset(self):
-        # At the end of round, update data and views
+        """
+        At the end of round, update data and views
+        """
         self.turn = 1
         self.round += 1
         self.deck.shuffle()
+
+        self.board.round_reset()
         self.player[0].round_reset()
         self.player[1].round_reset()
 
-        # TODO: remove lie panel from playerbox
+        self.ids.publicArea.round_reset(self.round)
         self.ids.player1_box.round_reset()
         self.ids.player2_box.round_reset()
-        self.board.round_reset()
-
 
     def build(self, testMode = True):
         """
         Initiate objects and views.
         """
-        # init game objects
+        ''' init game objects '''
         self.deck = Deck()
         self.evaluator = Evaluator()
 
@@ -57,10 +50,9 @@ class Game(GameFlow, FloatLayout):
         self.testMode = testMode
 
 
-        # create view objects
-
+        ''' create view objects '''
         # Scatter that can be rotated to display players
-        scatter_but = ScatterLayout(do_rotation = False,do_translation = False,do_scale = False,
+        scatter_bot = ScatterLayout(do_rotation = False,do_translation = False,do_scale = False,
             			size_hint = (1, 1), pos_hint = {'x': 0, 'y': 0},
                         rotation = 0 )
         # For player on top, the widget rotates 180 degree
@@ -69,19 +61,20 @@ class Game(GameFlow, FloatLayout):
                         rotation = 180 )
 
         box = PlayerDeck()
-        box.init_deck(self, "player1", 0, self.testMode)
         box2 = PlayerDeck()
-        box2.init_deck(self, "player2", 1, self.testMode)
         publicArea = PublicArea()
-        publicArea.init_deck()
+        box.build(self, "player1", 0, self.testMode)
+        box2.build(self, "player2", 1, self.testMode)
+        publicArea.build()
 
-        scatter_but.add_widget(box)
-        self.add_widget(scatter_but)
+        scatter_bot.add_widget(box)
         scatter_top.add_widget(box2)
+
+        self.add_widget(scatter_bot)
         self.add_widget(scatter_top)
         self.add_widget(publicArea)
 
-        # register view objects
+        # register id of view objects
         self.ids[box.id] = box
         self.ids[box2.id] = box2
         self.ids[publicArea.id] = publicArea
@@ -91,7 +84,6 @@ class Game(GameFlow, FloatLayout):
         A game round starts here.
         """
         self.round_reset()
-        self.ids.publicArea.update_round(self.round)
 
         # draw cards for players and board
         self.player[0].hand = self.deck.draw(5)
@@ -99,9 +91,9 @@ class Game(GameFlow, FloatLayout):
         self.board.set_cards( self.deck.draw(2) )
 
         # update view
-        self.ids.player1_box.update_hand(self.player[0].hand)
-        self.ids.player2_box.update_hand(self.player[1].hand)
-        self.ids.publicArea.update_hand(self.board.get_cards())
+        self.ids.player1_box.update_hand(self.player[0].hand, self.turn)
+        self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
+        self.ids.publicArea.round_play(self.board.get_cards())
 
         # TODO: fix bet
         self.ids.publicArea.set_chip_info(self.player[0].chip, self.player[1].chip, self.board.bonus)
@@ -133,7 +125,6 @@ class Game(GameFlow, FloatLayout):
 
         if self.player[cardWinner].caught and self.player[cardWinner^1].caught:
             # Both of players lied, and caught.
-            print "Draw due to double caught."
             winnerRate, maintainRate, loserRate = 0, 1, 0
         elif self.player[cardWinner].caught:
             # Only winner caught
@@ -147,8 +138,7 @@ class Game(GameFlow, FloatLayout):
                 winnerRate, maintainRate, loserRate = 1.5, 0.5, -1
             else:
                 winnerRate, maintainRate, loserRate = 1.5, 0, -0.5
-        else:
-            print "No one caught"
+        else: # No one caught
             winnerRate, maintainRate, loserRate = 1, 0, 0
             if self.player[cardWinner].suspect:
                 winnerRate -= 0.5
@@ -180,35 +170,48 @@ class Game(GameFlow, FloatLayout):
         else: # no one gets bonus due to double caught
             bonus = bonus + stacks * maintainRate
 
-        self.board.set_bonus(int(bonus))
-        self.board.round_end()
 
-        # print cards for check
-        print winnerRate, maintainRate, loserRate
-        print '*'*50
-        print "GAME RESULT:"
-        print "Player 1 hand rank = %d (%s)\n" % (self.player[0].cardScore, self.player[0].rank)
-        print "Player 2 hand rank = %d (%s)\n" % (self.player[1].cardScore, self.player[1].rank)
-
+        # TODO: real winner, win type, chip gain
         roundMsg = "Player " + str(cardWinner + 1) + " wins."
-        print roundMsg
-        print '*'*50
 
-        # temply shows card rank here
+        ''' Test Mode message '''
+        # print cards for check in test mode
+        if self.testMode:
+            print '*'*50
+            if self.player[cardWinner].caught and self.player[cardWinner^1].caught:
+                print "Draw due to double caught."
+            elif not self.player[cardWinner].caught and not self.player[cardWinner^1].caught:
+                print "No one caught."
+            print "             Player1          Player2"
+            print "Lie       : ", self.player[0].lie, "          ", self.player[1].lie
+            print "Suspection: ", self.player[0].suspect, "          ", self.player[1].suspect
+            print "Caught    : ", self.player[0].caught, "          ",  self.player[1].caught
+            if cardWinner == 0: print "             Win              Lose"
+            else: print "             Lose              Win"
+            print "Rate (winner/maintain/loser): ", winnerRate, maintainRate, loserRate
+            print "Card rank: "
+            print "Player 1 hand rank = %d (%s)" % (self.player[0].cardScore, self.player[0].rank)
+            print "Player 2 hand rank = %d (%s)" % (self.player[1].cardScore, self.player[1].rank)
+            print '*'*50
+
+        ''' end a game round '''
+        # TODO: show at another place
         self.ids.player1_box.set_button_message( self.evaluator.class_to_string(self.player[0].rank ))
         self.ids.player2_box.set_button_message( self.evaluator.class_to_string(self.player[1].rank ))
 
-        self.ids.publicArea.set_message("Round : " + str(self.round) +"\n" + roundMsg + "\nNew Round" )
+        self.ids.publicArea.round_end("Round : " + str(self.round) +"\n" + roundMsg + "\nNew Round" )
 
-        # Remove suspect widget
-        # TODO: move 2 right place
+        self.board.set_bonus(int(bonus))
+        self.board.round_end()
         self.ids.player1_box.round_end()
         self.ids.player2_box.round_end()
 
     def on_player_confirm(self, boxid, thisPlayer, cardList, bet):
-        # There are 4 turns in a round of a game. Players must confirm their cards to finish the turn
         """
-        In every turn, check:
+        The event can be triggered by both players when they press "Confirm" button.
+        After triggered, this method check if player's turn finished.
+
+        Checking detail:
             (1) if player's confirm ligelly (turn1: 3 cards selected, turn2: 1 card, turn3: lie or not)
                 -> rearrange sequence of cards and lock cards
                 -> if both of players finished confirm -> enter next turn
@@ -218,7 +221,6 @@ class Game(GameFlow, FloatLayout):
             (3) Turn4: if players suspect opponent lied.
                 -> decide winner and odds
         """
-        # TODO: no betting process
         if self.testMode:
             print "Player " + str(thisPlayer+1) + " Cards: " + str(cardList)
 
@@ -229,7 +231,6 @@ class Game(GameFlow, FloatLayout):
                 self.player[thisPlayer].bet = bet
                 self.player[thisPlayer].currentTurn = 2
                 self.ids[boxid].update_turn(2)
-                #self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
                 # if other player already end turn, this turn is end
                 if self.player[thisPlayer^1].currentTurn == 2:
                     self.turn_1_end()
@@ -240,15 +241,14 @@ class Game(GameFlow, FloatLayout):
                 self.player[thisPlayer].bet = bet
                 self.player[thisPlayer].currentTurn = 3
                 self.ids[boxid].update_turn(3)
-                #self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
                 if self.player[thisPlayer^1].currentTurn == 3:
                     self.turn_2_end()
+
         elif self.turn == 3 and len(cardList) == 1 and self.player[thisPlayer].currentTurn == 3:
             self.player[thisPlayer].reorderCard(cardList)
             self.player[thisPlayer].bet = bet
             self.player[thisPlayer].currentTurn = 4
             self.ids[boxid].update_turn(4)
-            #self.ids[boxid].update_hand(self.player[thisPlayer].hand, self.turn)
             if self.player[thisPlayer^1].currentTurn == 4:
                 self.turn_3_end()
 
@@ -258,10 +258,14 @@ class Game(GameFlow, FloatLayout):
                 self.round_end()
 
         elif self.turn == 5:
-            # wait for next round
+            # wait for next round?
             pass
 
     def on_player_lie(self, player, card):
+        """
+        Triggered by players in turn 3 if player decided to "lie".
+        Check if the lie-card player assigned is different from his original card.
+        """
         print str(player) + " made a lie to card: " + card
         card = Card.new(card)
         pno = int(player[6]) - 1
@@ -277,6 +281,11 @@ class Game(GameFlow, FloatLayout):
                 self.turn_3_end()
 
     def on_player_suspect(self, *args):
+        """
+        Triggered by players in turn 4 if player decided to "suspect his opponent".
+        Check if he caught his opponent on lie.
+        """
+        # TODO: fix the args
         print args[0] + " suspect his opponent lied."
         player = args[0]
         pno = int(args[0][-1])-1
@@ -290,61 +299,63 @@ class Game(GameFlow, FloatLayout):
             self.round_end()
 
     def turn_1_end(self):
-        print ">> turn 1 end"
+        if self.testMode:
+            print ">> turn 1 end"
+
+        ''' Decide bet and chip of the turn '''
         bet, chip = self.board.set_bet(self.turn, self.player[0].bet, self.player[1].bet)
-        #set_bet_info
         # TODO: chip < 0
+        self.player[0].chip -= chip
+        self.player[1].chip -= chip
+
+        ''' update game info '''
         self.ids.publicArea.set_bet_info( self.player[0].bet, self.player[1].bet, bet, chip)
         self.ids.publicArea.update_turn(self.turn)
         self.ids.publicArea.set_info( self.board.get_bet_string(self.turn) )
-
-        self.player[0].chip -= chip
-        self.player[1].chip -= chip
 
         self.turn = 2
         self.ids.player1_box.update_hand(self.player[0].hand, self.turn)
         self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
 
-
     def turn_2_end(self):
-        print ">> turn 2 end"
+        if self.testMode:
+            print ">> turn 2 end"
+
         bet, chip = self.board.set_bet(self.turn, self.player[0].bet, self.player[1].bet)
-        #set_bet_info
-        # TODO: chip < 0
+        self.player[0].chip -= chip
+        self.player[1].chip -= chip
+
         self.ids.publicArea.set_bet_info( self.player[0].bet, self.player[1].bet, bet, chip)
         self.ids.publicArea.update_turn(self.turn)
         self.ids.publicArea.set_info( self.board.get_bet_string(self.turn) )
-
-        self.player[0].chip -= chip
-        self.player[1].chip -= chip
 
         self.turn = 3
         self.ids.player1_box.update_hand(self.player[0].hand, self.turn)
         self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
 
         # set widgets for tell lie
-        self.ids.player1_box.round_turn_2_end()
-        self.ids.player2_box.round_turn_2_end()
+        self.ids.player1_box.turn_2_end()
+        self.ids.player2_box.turn_2_end()
 
     def turn_3_end(self):
-        print ">> turn 3 end"
+        if self.testMode:
+            print ">> turn 3 end"
+
         bet, chip = self.board.set_bet(self.turn, self.player[0].bet, self.player[1].bet)
-        #set_bet_info
-        # TODO: chip < 0
+        self.player[0].chip -= chip
+        self.player[1].chip -= chip
+
         self.ids.publicArea.set_bet_info( self.player[0].bet, self.player[1].bet, bet, chip)
         self.ids.publicArea.update_turn(self.turn)
         self.ids.publicArea.set_info( self.board.get_bet_string(self.turn) )
-
-        self.player[0].chip -= chip
-        self.player[1].chip -= chip
 
         self.turn = 4
         self.ids.player1_box.update_hand(self.player[0].hand, self.turn)
         self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
 
         # Set suspect widgets for turn 4
-        self.ids.player1_box.round_turn_3_end()
-        self.ids.player2_box.round_turn_3_end()
+        self.ids.player1_box.turn_3_end()
+        self.ids.player2_box.turn_3_end()
 
     def get_turn(self):
         return self.turn
@@ -352,10 +363,11 @@ class Game(GameFlow, FloatLayout):
     def update(self, dt):
         pass
 
-    def press_new_round(self):
-        # implement "new round" here
-        # TODO: fix removed checkbox
-
+    def on_press_new_round(self):
+        """
+        Triggered by players after turn 4 if player press "New Round" button in the public area.
+        Start a new round of the game.
+        """
         self.round_play()
 
     def test_image(self):
@@ -367,11 +379,9 @@ class LiarPokerApp(App):
     def build(self):
         """
         TODO:
-            1. Betting
-            2. End game strategy
-            3. Player drop out
-            4. Flow problem (potential bug): end game using button before turn 5
-            5.
+            1. Player drop out (Fold)
+            2. card UI
+            3. Game info.
         """
         game = Game()
         game.build()

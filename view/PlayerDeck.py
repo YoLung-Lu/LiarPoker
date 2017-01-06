@@ -11,21 +11,21 @@ from SingleCard import SingleCard
 from CardSelector import CardSelector
 from BetSelector import BetSelector
 
-class PlayerDeck(BoxLayout):
+from model import GameFlow
+from abc import ABCMeta
+
+class PlayerDeck(GameFlow, BoxLayout):
+    __metaclass__ = type( 'GameMeta', (type(BoxLayout), ABCMeta), {})
     widget_storage = {}
 
-    def init_deck(self, parent, pname, pno, testMode):
-        #b = self.children[0]
-        #self.remove_widget(b)
-        #self.remove_widget(self.children[0])
+    def build(self, parent, pname, pno, testMode):
         self.root = parent
         self.name = pname
         self.no = pno
         self.testMode = testMode
         self.id = pname + "_box"
         self.turn = 0
-
-        # betting strategy decided by "BetSelector"
+        # betting strategy decided by "BetSelector". Set to 1 as default
         self.bet = 1
 
         # register 5 cards
@@ -38,8 +38,22 @@ class PlayerDeck(BoxLayout):
 
         self._init_child_widget()
 
-        self._add_confirm_button()
-        self._add_bet_widget()
+
+    def round_play(self):
+        # update_hand
+        pass
+
+    def turn_2_end(self):
+        self._remove_empty_widget()
+        self._add_lie_widget()
+
+    def turn_3_end(self):
+        self._remove_lie_widget()
+        self._add_suspect_widget()
+
+    def round_end(self):
+        # remove suspect widget
+        self._remove_suspect_widget()
         self._add_empty_widget()
 
     def round_reset(self):
@@ -51,7 +65,7 @@ class PlayerDeck(BoxLayout):
             else:
                 self.ids[self.name + '_card'+str(i)].uncheck()
 
-    def update_hand(self, hand, turn = 1):
+    def update_hand(self, hand, turn):
         # input hand of player, update to widget base on current turn
         openCardIndex = {1:5, 2:1, 3:0, 4:-1}
         for i in range(5):
@@ -100,18 +114,6 @@ class PlayerDeck(BoxLayout):
         bet = self.ids[self.name+"_bs"].get_bet()
         self.root.on_player_confirm(self.id, self.no, pickedCards, bet)
 
-    def round_turn_2_end(self):
-        self._remove_empty_widget()
-        self._add_lie_widget()
-
-    def round_turn_3_end(self):
-        self._remove_lie_widget()
-        self._add_suspect_widget()
-
-    def round_end(self):
-        # remove suspect widget
-        self._remove_suspect_widget()
-        self._add_empty_widget()
 
     def _init_child_widget(self):
         # bet selector
@@ -150,6 +152,11 @@ class PlayerDeck(BoxLayout):
         self.widget_storage[s.id] = s
         self.widget_storage[bs.id] = bs
         self.widget_storage[cs.id] = cs
+
+        # put child widgets onto screen
+        self._add_confirm_button()
+        self._add_bet_widget()
+        self._add_empty_widget()
 
     def _add_empty_widget(self):
         e = self.widget_storage[self.name + "_empty"]
