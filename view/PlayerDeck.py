@@ -59,7 +59,7 @@ class PlayerDeck(GameFlow, BoxLayout):
     def round_reset(self):
         for i in range(5):
             self.ids[self.name + '_card'+str(i)].enable_check()
-            self.ids[self.name + '_card'+str(i)].la.text = ""
+            self.ids[self.name + '_card'+str(i)].reset_card()
             if self.testMode and i > 1:
                 self.ids[self.name + '_card'+str(i)].do_check()
             else:
@@ -69,9 +69,16 @@ class PlayerDeck(GameFlow, BoxLayout):
         # input hand of player, update to widget base on current turn
         openCardIndex = {1:5, 2:1, 3:0, 4:-1}
         for i in range(5):
+            self.ids[self.name + '_card'+str(i)].set_card( Card.int_to_str(hand[i]) )
+            if i > openCardIndex[turn]:
+                self.ids[self.name + '_card'+str(i)].show_card_to_all()
+            else:
+                self.ids[self.name + '_card'+str(i)].show_card_to_self()
+            '''
             self.ids[self.name + '_card'+str(i)].lb.text = Card.int_to_pretty_str( hand[i] )
             if i > openCardIndex[turn]:
                 self.ids[self.name + '_card'+str(i)].la.text = Card.int_to_pretty_str( hand[i] )
+            '''
 
     def update_turn(self, turn):
         # Cards revealed after each turn

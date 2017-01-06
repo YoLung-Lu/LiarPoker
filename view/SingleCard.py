@@ -5,7 +5,6 @@ from kivy.uix.image import Image
 class SingleCard(FloatLayout):
     la = ObjectProperty(None)
     lb = ObjectProperty(None)
-    image_top_id = ObjectProperty(None)
     check = ObjectProperty(None)
     enable = True
     suit = None
@@ -14,27 +13,43 @@ class SingleCard(FloatLayout):
     # TODO: where to put this?
     cardImage = {'s':"Spade.png", 'h':"Heart.png", 'd':"Diamond.png", 'c':"Club.png"}
 
-    def set_card(self, rank, suit):
-        self.suit = suit
-        self.rank = rank
+    def reset_card(self):
+        self.suit = None
+        self.rank = 0
+        self.la.text = ""
+        self.lb.text = ""
+        self._remove_suit_image()
+
+    def set_card(self, cardStr):
+        self.rank = cardStr[0]
+        self.suit = cardStr[1]
 
     def show_card_to_self(self):
         """
         Only shows button side of card so that opponent cannot see it.
         """
-        self.la.text = self.suit + str(self.rank)
+        self.lb.text = str(self.rank)
+        self._load_suit_image(self.lb.children[0])
 
     def show_card_to_all(self):
-        self.la.text = self.suit + str(self.rank)
+        self.la.text = str(self.rank)
         self.lb.text = self.la.text
 
         # test on suit image
         self._load_suit_image(self.la.children[0])
+        self._load_suit_image(self.lb.children[0])
 
     def _load_suit_image(self, widget):
         widget.source = 'resource/' + self.cardImage[self.suit]
         widget.color = [1,1,1,1]
         #self.la.children[0].allow_stretch = True
+
+    def _remove_suit_image(self):
+        self.la.children[0].sourcee = ""
+        self.la.children[0].color = [0,0,0,0]
+        self.lb.children[0].sourcee = ""
+        self.lb.children[0].color = [0,0,0,0]
+
 
     def round_reset(self):
         self.suit = None

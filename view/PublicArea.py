@@ -44,8 +44,7 @@ class PublicArea(GameFlow, BoxLayout):
 
     def _update_hand(self, hand):
         for i in range(2):
-            card = Card.int_to_str(hand[i])
-            self.ids["public_card" + str(i)].set_card(card[0], card[1])
+            self.ids["public_card" + str(i)].set_card( Card.int_to_str(hand[i]) )
             self.ids["public_card" + str(i)].show_card_to_all()
 
     def set_info(self, msg = ""):

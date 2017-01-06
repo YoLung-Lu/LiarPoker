@@ -183,7 +183,7 @@ class Game(GameFlow, FloatLayout):
             elif not self.player[cardWinner].caught and not self.player[cardWinner^1].caught:
                 print "No one caught."
             print "             Player1          Player2"
-            print "Lie       : ", self.player[0].lie, "          ", self.player[1].lie
+            print "Lie       : ", self.player[0].lie, "           ", self.player[1].lie
             print "Suspection: ", self.player[0].suspect, "          ", self.player[1].suspect
             print "Caught    : ", self.player[0].caught, "          ",  self.player[1].caught
             if cardWinner == 0: print "             Win              Lose"
@@ -380,7 +380,7 @@ class LiarPokerApp(App):
         """
         TODO:
             1. Player drop out (Fold)
-            2. card UI
+            2. Player don't have enough chip
             3. Game info.
         """
         game = Game()

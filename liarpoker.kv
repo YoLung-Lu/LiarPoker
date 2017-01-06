@@ -41,7 +41,6 @@
     pos: root.pos
     la: la
     lb: lb
-    image_top_id: image_top_id
     check: check
 
     canvas:
@@ -78,24 +77,42 @@
 
             Label:
                 id: la
-                #font_size: 20
-                size: 20, 20
+                font_size: 20
+                size: 25, 25
+                halign: "left"
                 pos: self.parent.x, self.parent.y
                 text: ""
 
                 Image:
-                    pos: self.parent.x + 20, self.parent.y
-                    size: 25, 25
+                    pos: self.parent.x + 2.8, self.parent.y + 22
+                    size: 20, 20
                     color: [0,0,0,0]
                     #source: "resource/club.png"
 
-    Label:
-        id: lb
-        #font_size: 20
+    Widget:
+        id: image_botton_id
         size_hint: (.2, 0.1)
         pos_hint: {'x': .7, 'y': 0.05}
-        text: ""
 
+        ScatterLayout:
+            pos: self.parent.pos
+            size: self.parent.size
+            rotation: 0
+            do_rotation: False
+            do_translation: False
+            do_scale: False
+
+            Label:
+                id: lb
+                size: 25, 25
+                font_size: 20
+                halign: "left"
+                text: ""
+
+                Image:
+                    pos: self.parent.x + 2.8, self.parent.y + 22
+                    size: 20, 20
+                    color: [0,0,0,0]
 
 <CardSelector>:
     pos: root.pos
