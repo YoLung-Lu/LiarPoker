@@ -169,6 +169,7 @@ class Game(GameFlow, FloatLayout):
             bonus = stacks * maintainRate
         else: # no one gets bonus due to double caught
             bonus = bonus + stacks * maintainRate
+        self.board.set_bonus(int(bonus))
 
 
         # TODO: real winner, win type, chip gain
@@ -183,12 +184,13 @@ class Game(GameFlow, FloatLayout):
             elif not self.player[cardWinner].caught and not self.player[cardWinner^1].caught:
                 print "No one caught."
             print "             Player1          Player2"
-            print "Lie       : ", self.player[0].lie, "           ", self.player[1].lie
+            print "Lie       : ", self.player[0].lie, "          ", self.player[1].lie
             print "Suspection: ", self.player[0].suspect, "          ", self.player[1].suspect
             print "Caught    : ", self.player[0].caught, "          ",  self.player[1].caught
             if cardWinner == 0: print "             Win              Lose"
             else: print "             Lose              Win"
             print "Rate (winner/maintain/loser): ", winnerRate, maintainRate, loserRate
+            print "Chip and bonus after: ", self.board.totalChip, self.board.bonus
             print "Card rank: "
             print "Player 1 hand rank = %d (%s)" % (self.player[0].cardScore, self.player[0].rank)
             print "Player 2 hand rank = %d (%s)" % (self.player[1].cardScore, self.player[1].rank)
@@ -201,7 +203,6 @@ class Game(GameFlow, FloatLayout):
 
         self.ids.publicArea.round_end("Round : " + str(self.round) +"\n" + roundMsg + "\nNew Round" )
 
-        self.board.set_bonus(int(bonus))
         self.board.round_end()
         self.ids.player1_box.round_end()
         self.ids.player2_box.round_end()
@@ -222,7 +223,11 @@ class Game(GameFlow, FloatLayout):
                 -> decide winner and odds
         """
         if self.testMode:
-            print "Player " + str(thisPlayer+1) + " Cards: " + str(cardList)
+            print "Player " + str(thisPlayer+1) + " Cards: " + str(cardList) + ", Bets: ", bet
+
+        if bet == 3:
+            # player fold
+            self.player[thisPlayer].fold = True
 
         if self.turn == 1:
             # check if 3 cards selected
@@ -298,9 +303,46 @@ class Game(GameFlow, FloatLayout):
         if self.player[pno^1].currentTurn == 5:
             self.round_end()
 
+    def round_end_on_fold(self):
+        msg = ""
+        chip = self.board.totalChip
+        if self.player[0].fold and self.player[1].fold: # both players fold
+            self.board.bonus += chip
+            msg = "Both players"
+        elif self.player[0].fold:
+            self.player[1].chip += chip
+            msg = "Player1"
+        else:
+            self.player[0].chip += chip
+            msg = "Player2"
+
+        msg += " fold in this round."
+        print msg
+
+        # set info for fold
+        self.ids.publicArea.set_info( msg )
+
+        self.round_reset_on_fold()
+
+    def round_reset_on_fold(self):
+
+        # reset player box widget by end turn 3
+        if self.turn == 3:
+            self.ids.player1_box.turn_3_end()
+            self.ids.player2_box.turn_3_end()
+
+        self.ids.player1_box.round_end()
+        self.ids.player2_box.round_end()
+        self.board.round_end()
+
+
     def turn_1_end(self):
         if self.testMode:
             print ">> turn 1 end"
+
+        if self.player[0].fold or self.player[1].fold:
+            self.round_end_on_fold()
+            return ""
 
         ''' Decide bet and chip of the turn '''
         bet, chip = self.board.set_bet(self.turn, self.player[0].bet, self.player[1].bet)
@@ -321,6 +363,10 @@ class Game(GameFlow, FloatLayout):
         if self.testMode:
             print ">> turn 2 end"
 
+        if self.player[0].fold or self.player[1].fold:
+            self.round_end_on_fold()
+            return ""
+
         bet, chip = self.board.set_bet(self.turn, self.player[0].bet, self.player[1].bet)
         self.player[0].chip -= chip
         self.player[1].chip -= chip
@@ -340,6 +386,10 @@ class Game(GameFlow, FloatLayout):
     def turn_3_end(self):
         if self.testMode:
             print ">> turn 3 end"
+
+        if self.player[0].fold or self.player[1].fold:
+            self.round_end_on_fold()
+            return ""
 
         bet, chip = self.board.set_bet(self.turn, self.player[0].bet, self.player[1].bet)
         self.player[0].chip -= chip

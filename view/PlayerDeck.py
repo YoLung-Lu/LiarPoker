@@ -65,6 +65,8 @@ class PlayerDeck(GameFlow, BoxLayout):
             else:
                 self.ids[self.name + '_card'+str(i)].uncheck()
 
+        self.ids[self.name + "_bs"].reset()
+
     def update_hand(self, hand, turn):
         # input hand of player, update to widget base on current turn
         openCardIndex = {1:5, 2:1, 3:0, 4:-1}

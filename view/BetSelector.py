@@ -24,6 +24,10 @@ class BetSelector(FloatLayout):
         # get the bet choice of player ( range(0,4) )
         return self.bet
 
+    def reset(self):
+        self._select_bet(2)
+        self._state_normalize()
+
     def _select_bet(self, bet):
         self.bet = bet
 
@@ -32,3 +36,4 @@ class BetSelector(FloatLayout):
         for child in self.children:
             if child.__module__ == "kivy.uix.togglebutton":
                 child.state = "normal"
+        self.children[1].state = "down"

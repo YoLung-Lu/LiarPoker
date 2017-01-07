@@ -11,6 +11,7 @@ class Player:
         self.lie = False
         self.suspect = False
         self.caught = False
+        self.fold = False
 
     def bet(self, betting):
         if betting < self.chip:

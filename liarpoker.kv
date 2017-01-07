@@ -186,13 +186,20 @@
         Rectangle:
             pos: self.pos
             size: self.size[0], self.size[1]*0.8
+            
+    ToggleButton:
+        size_hint: (1, .2)
+        pos_hint: {'x': 0, 'y': 0.6}
+        text: 'Large bet'
+        group: 'bet'
+        on_press: root._select_bet(0)
 
     ToggleButton:
         size_hint: (1, .2)
-        pos_hint: {'x': 0, 'y': 0}
-        text: 'Fold'
+        pos_hint: {'x': 0, 'y': 0.4}
+        text: 'Middle bet'
         group: 'bet'
-        on_press: root._select_bet(3)
+        on_press: root._select_bet(1)
 
     ToggleButton:
         size_hint: (1, .2)
@@ -204,14 +211,7 @@
 
     ToggleButton:
         size_hint: (1, .2)
-        pos_hint: {'x': 0, 'y': 0.4}
-        text: 'Middle bet'
+        pos_hint: {'x': 0, 'y': 0}
+        text: 'Fold'
         group: 'bet'
-        on_press: root._select_bet(1)
-
-    ToggleButton:
-        size_hint: (1, .2)
-        pos_hint: {'x': 0, 'y': 0.6}
-        text: 'Large bet'
-        group: 'bet'
-        on_press: root._select_bet(0)
+        on_press: root._select_bet(3)
