@@ -60,7 +60,8 @@ class SingleCard(FloatLayout):
 
     def click(self):
         # state change when button clicked
-        self.check.active = not self.check.active
+        if self.enable:
+            self.check.active = not self.check.active
 
     def uncheck(self):
         # state change to "False"

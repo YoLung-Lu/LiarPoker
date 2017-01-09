@@ -83,7 +83,7 @@ class Game(GameFlow, FloatLayout):
         """
         A game round starts here.
         """
-        self.round_reset()
+        #self.round_reset()
 
         # draw cards for players and board
         self.player[0].hand = self.deck.draw(5)
@@ -91,9 +91,13 @@ class Game(GameFlow, FloatLayout):
         self.board.set_cards( self.deck.draw(2) )
 
         # update view
+        self.ids.player1_box.round_play()
+        self.ids.player2_box.round_play()
+        self.ids.publicArea.round_play(self.board.get_cards())
         self.ids.player1_box.update_hand(self.player[0].hand, self.turn)
         self.ids.player2_box.update_hand(self.player[1].hand, self.turn)
-        self.ids.publicArea.round_play(self.board.get_cards())
+
+
 
         # TODO: fix bet
         self.ids.publicArea.set_chip_info(self.player[0].chip, self.player[1].chip, self.board.bonus)
@@ -418,6 +422,7 @@ class Game(GameFlow, FloatLayout):
         Triggered by players after turn 4 if player press "New Round" button in the public area.
         Start a new round of the game.
         """
+        self.round_reset()
         self.round_play()
 
     def test_image(self):

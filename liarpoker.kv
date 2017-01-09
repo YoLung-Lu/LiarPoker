@@ -10,7 +10,7 @@
     orientation: 'horizontal'
     id: publicArea
     size_hint: (1, 0.4)
-    pos_hint: {'center_x': 0.5, 'y': 0.3}
+    pos_hint: {'center_x': 0.5, 'y': 0.33}
 
     Label:
         id: info_label_id
@@ -45,22 +45,28 @@
 
     canvas:
         Color:
-            rgba: 255,255,255,0.5
+            rgba: 255,255,255,0
         Rectangle:
             pos: self.pos
             size: self.size[0], self.size[1]*0.8
+
     CheckBox:
         id: check
         size_hint: (.1, .1)
         pos_hint: {'x': .45, 'top': 0.9}
-        text: 'Button 1'
-        #on_active: root.event_checkbox_selected()
-        #on_press: root.get_widget_by_id('check')
+        text: ''
 
     Button:
         size_hint: (1, .8)
         pos_hint: {'x': 0, 'y': 0}
         on_press: root.click()
+
+    Image:
+        source: 'resource/Card.png'
+        x: self.parent.x
+        y: self.parent.y
+        pos_hint: {'x': 0, 'y': 0}
+        size_hint: (1, 0.8)
 
     Widget:
         id: image_top_id
@@ -68,7 +74,9 @@
         pos_hint: {'x': .1, 'y': 0.65}
 
         ScatterLayout:
-            pos: self.parent.pos
+            #pos: self.parent.pos
+            y: self.parent.y
+            center_x: self.parent.center_x
             size: self.parent.size
             rotation: 180
             do_rotation: False
@@ -77,14 +85,15 @@
 
             Label:
                 id: la
+                color: 0,0,0,1
                 font_size: 20
                 size: 25, 25
-                halign: "left"
+                halign: "center"
                 pos: self.parent.x, self.parent.y
                 text: ""
 
                 Image:
-                    pos: self.parent.x + 2.8, self.parent.y + 22
+                    pos: self.parent.x, self.parent.y + 22
                     size: 20, 20
                     color: [0,0,0,0]
                     #source: "resource/club.png"
@@ -95,7 +104,9 @@
         pos_hint: {'x': .7, 'y': 0.05}
 
         ScatterLayout:
-            pos: self.parent.pos
+            #pos: self.parent.pos
+            y: self.parent.y
+            center_x: self.parent.center_x
             size: self.parent.size
             rotation: 0
             do_rotation: False
@@ -105,12 +116,13 @@
             Label:
                 id: lb
                 size: 25, 25
+                color: 0,0,0,1
                 font_size: 20
-                halign: "left"
+                halign: "center"
                 text: ""
 
                 Image:
-                    pos: self.parent.x + 2.8, self.parent.y + 22
+                    pos: self.parent.x, self.parent.y + 22
                     size: 20, 20
                     color: [0,0,0,0]
 
@@ -150,30 +162,50 @@
     ToggleButton:
         size_hint: (.4, .15)
         pos_hint: {'x': 0.1, 'y': 0}
-        text: 'C'
+        #text: 'C'
         group: 'suit'
         on_press: root._select_suit('C')
+        Image:
+            source: 'resource/Club.png'
+            center_x: self.parent.center_x
+            center_y: self.parent.center_y
+            size: 20, 20
 
     ToggleButton:
         size_hint: (.4, .15)
         pos_hint: {'x': 0.6, 'y': 0}
-        text: 'D'
+        #text: 'D'
         group: 'suit'
         on_press: root._select_suit('D')
+        Image:
+            source: 'resource/Diamond.png'
+            center_x: self.parent.center_x
+            center_y: self.parent.center_y
+            size: 20, 20
 
     ToggleButton:
         size_hint: (.4, .15)
         pos_hint: {'x': 0.1, 'y': 0.2}
-        text: 'H'
+        #text: 'H'
         group: 'suit'
         on_press: root._select_suit('H')
+        Image:
+            source: 'resource/Heart.png'
+            center_x: self.parent.center_x
+            center_y: self.parent.center_y
+            size: 20, 20
 
     ToggleButton:
         size_hint: (.4, .15)
         pos_hint: {'x': 0.6, 'y': 0.2}
-        text: 'S'
+        #text: 'S'
         group: 'suit'
         on_press: root._select_suit('S')
+        Image:
+            source: 'resource/Spade.png'
+            center_x: self.parent.center_x
+            center_y: self.parent.center_y
+            size: 20, 20
 
 
 <BetSelector>:
@@ -186,7 +218,7 @@
         Rectangle:
             pos: self.pos
             size: self.size[0], self.size[1]*0.8
-            
+
     ToggleButton:
         size_hint: (1, .2)
         pos_hint: {'x': 0, 'y': 0.6}

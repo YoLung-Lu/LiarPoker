@@ -41,29 +41,40 @@ class PlayerDeck(GameFlow, BoxLayout):
 
     def round_play(self):
         # update_hand
-        pass
+        if self.testMode:
+            for i in range(2,5):
+                self.ids[self.name + '_card'+str(i)].do_check()
 
     def turn_2_end(self):
-        self._remove_empty_widget()
         self._add_lie_widget()
+        self._remove_empty_widget()
+        print "LEN:", len(self.children)
 
     def turn_3_end(self):
+        self._add_suspect_widget(2)
+        self._remove_bet_widget()
+        self._add_empty_widget(4)
+
         self._remove_lie_widget()
-        self._add_suspect_widget()
+
+
+        print "LEN:", len(self.children)
+        print self.children
+        #self._remove_bet_widget()
+        #self.add_empty_widget2()
 
     def round_end(self):
-        # remove suspect widget
-        self._remove_suspect_widget()
-        self._add_empty_widget()
+        pass
 
     def round_reset(self):
+        self._remove_suspect_widget()
+        self._add_bet_widget(1)
+
+
         for i in range(5):
             self.ids[self.name + '_card'+str(i)].enable_check()
             self.ids[self.name + '_card'+str(i)].reset_card()
-            if self.testMode and i > 1:
-                self.ids[self.name + '_card'+str(i)].do_check()
-            else:
-                self.ids[self.name + '_card'+str(i)].uncheck()
+            self.ids[self.name + '_card'+str(i)].uncheck()
 
         self.ids[self.name + "_bs"].reset()
 
@@ -152,28 +163,33 @@ class PlayerDeck(GameFlow, BoxLayout):
         #s.bind(on_press = buttoncallback)
 
         # show empty widget when lie widget not on screen
-        emptyWidget = Widget(   id = self.name + "_empty",
-                                size_hint= (1, 1))
+        emptyWidget = Widget(   id = self.name + "_empty", size_hint= (1, 1))
+        emptyWidget2 = Widget(   id = self.name + "_empty2", size_hint= (1, 1))
 
         # store child widgets
         self.widget_storage[emptyWidget.id] = emptyWidget
+        self.widget_storage[emptyWidget2.id] = emptyWidget2
         self.widget_storage[b.id] = b
         self.widget_storage[s.id] = s
         self.widget_storage[bs.id] = bs
         self.widget_storage[cs.id] = cs
 
         # put child widgets onto screen
-        self._add_confirm_button()
-        self._add_bet_widget()
         self._add_empty_widget()
+        self._add_bet_widget()
+        self._add_confirm_button()
 
-    def _add_empty_widget(self):
+    def _add_empty_widget(self, pos = 0):
         e = self.widget_storage[self.name + "_empty"]
-        self.add_widget(e, index = len(self.children))
+        self.add_widget(e, index = pos )
 
-    def _add_suspect_widget(self):
+    def _add_empty_widget2(self, pos = 0):
+        e = self.widget_storage[self.name + "_empty2"]
+        self.add_widget(e, index = pos )
+
+    def _add_suspect_widget(self, pos = 2):
         s = self.widget_storage[self.name + "_but_suspect"]
-        self.add_widget(s, index = len(self.children))
+        self.add_widget(s, index = pos)
         self.ids[s.id] = s
 
     def _add_confirm_button(self):
@@ -181,18 +197,22 @@ class PlayerDeck(GameFlow, BoxLayout):
         self.add_widget(b)
         self.ids[b.id] = b
 
-    def _add_bet_widget(self):
+    def _add_bet_widget(self, pos = 0):
         bs = self.widget_storage[self.name + "_bs"]
-        self.add_widget(bs, index=len(self.children) )
+        self.add_widget(bs, index = pos )
         self.ids[bs.id] = bs
 
     def _add_lie_widget(self):
         cs = self.widget_storage[self.name + "_cs"]
-        self.add_widget(cs, index=len(self.children) )
+        self.add_widget(cs, index = 2 )
         self.ids[cs.id] = cs
 
     def _remove_empty_widget(self):
         e = self.widget_storage[self.name + "_empty"]
+        self.remove_widget(e)
+
+    def _remove_empty_widget2(self):
+        e = self.widget_storage[self.name + "_empty2"]
         self.remove_widget(e)
 
     def _remove_bet_widget(self):
