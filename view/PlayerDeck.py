@@ -48,7 +48,6 @@ class PlayerDeck(GameFlow, BoxLayout):
     def turn_2_end(self):
         self._add_lie_widget()
         self._remove_empty_widget()
-        print "LEN:", len(self.children)
 
     def turn_3_end(self):
         self._add_suspect_widget(2)
@@ -57,11 +56,9 @@ class PlayerDeck(GameFlow, BoxLayout):
 
         self._remove_lie_widget()
 
-
-        print "LEN:", len(self.children)
-        print self.children
-        #self._remove_bet_widget()
-        #self.add_empty_widget2()
+        # TODO: fix widget sequence
+        #print "LEN:", len(self.children)
+        #print self.children
 
     def round_end(self):
         pass
@@ -115,8 +112,12 @@ class PlayerDeck(GameFlow, BoxLayout):
         m = self.ids[self.name + "_but_confirm"].text
         self.ids[self.name + "_but_confirm"].text = m + "\n" + msg
 
+    def press_player_lie(self, player, card):
+        bet = self.ids[self.name+"_bs"].get_bet()
+        self.root.on_player_lie(player, card, bet)
+
     def press_player_suspect(self, *kargs):
-        self.root.on_player_suspect(self.name)
+        self.root.on_player_suspect(self.name, self.no)
 
     def press_player_confirm(self, *kargs):
         # Notify the selected cards
@@ -143,7 +144,7 @@ class PlayerDeck(GameFlow, BoxLayout):
 
         # card selector
         cs = CardSelector(id = self.name + "_cs")
-        cs.build(self.root)
+        cs.build(self)
         for child in cs.children:
             child.group = self.name + "_suit"
 

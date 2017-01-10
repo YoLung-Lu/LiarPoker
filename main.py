@@ -7,6 +7,7 @@ from view import BetSelector, CardSelector, PlayerDeck, PublicArea, SingleCard
 from model import GameFlow, Board, Player
 from deuces import Card, Evaluator, Deck
 from abc import ABCMeta
+from testcase import Tester
 
 
 class Game(GameFlow, FloatLayout):
@@ -14,7 +15,7 @@ class Game(GameFlow, FloatLayout):
     __metaclass__ = type( 'GameMeta', (type(FloatLayout), ABCMeta), {})
     id = "root"
     turn = 1
-    round = 0
+    round = 1
 
     def round_reset(self):
         """
@@ -187,12 +188,12 @@ class Game(GameFlow, FloatLayout):
                 print "Draw due to double caught."
             elif not self.player[cardWinner].caught and not self.player[cardWinner^1].caught:
                 print "No one caught."
-            print "             Player1          Player2"
-            print "Lie       : ", self.player[0].lie, "          ", self.player[1].lie
-            print "Suspection: ", self.player[0].suspect, "          ", self.player[1].suspect
-            print "Caught    : ", self.player[0].caught, "          ",  self.player[1].caught
-            if cardWinner == 0: print "             Win              Lose"
-            else: print "             Lose              Win"
+            print "             Player1\t\tPlayer2"
+            print "Lie       : ", self.player[0].lie, "\t\t", self.player[1].lie
+            print "Suspection: ", self.player[0].suspect, "\t\t", self.player[1].suspect
+            print "Caught    : ", self.player[0].caught, "\t\t",  self.player[1].caught
+            if cardWinner == 0: print "             Win\t\tLose"
+            else: print "             Lose\t\tWin"
             print "Rate (winner/maintain/loser): ", winnerRate, maintainRate, loserRate
             print "Chip and bonus after: ", self.board.totalChip, self.board.bonus
             print "Card rank: "
@@ -270,7 +271,7 @@ class Game(GameFlow, FloatLayout):
             # wait for next round?
             pass
 
-    def on_player_lie(self, player, card):
+    def on_player_lie(self, player, card, bet):
         """
         Triggered by players in turn 3 if player decided to "lie".
         Check if the lie-card player assigned is different from his original card.
@@ -281,6 +282,7 @@ class Game(GameFlow, FloatLayout):
 
         if self.player[pno].hand[0] != card:
             self.player[pno].lie = True
+            self.player[pno].bet = bet
             self.player[pno].hand.pop(0)
             self.player[pno].hand.insert(0, card)
             self.player[pno].currentTurn = 4
@@ -289,15 +291,13 @@ class Game(GameFlow, FloatLayout):
             if self.player[pno^1].currentTurn == 4:
                 self.turn_3_end()
 
-    def on_player_suspect(self, *args):
+    def on_player_suspect(self, player, pno):
         """
         Triggered by players in turn 4 if player decided to "suspect his opponent".
         Check if he caught his opponent on lie.
         """
         # TODO: fix the args
-        print args[0] + " suspect his opponent lied."
-        player = args[0]
-        pno = int(args[0][-1])-1
+        print player + " suspect his opponent lied."
         self.player[pno].suspect = True
         if self.player[pno^1].lie:
             self.player[pno^1].caught = True
@@ -422,8 +422,9 @@ class Game(GameFlow, FloatLayout):
         Triggered by players after turn 4 if player press "New Round" button in the public area.
         Start a new round of the game.
         """
-        self.round_reset()
-        self.round_play()
+        if self.turn == 5:
+            self.round_reset()
+            self.round_play()
 
     def test_image(self):
         #img = Image(source='resource/Suspection.png', size_hint=(0.5,0.5) )
@@ -438,9 +439,16 @@ class LiarPokerApp(App):
             2. Player don't have enough chip
             3. Game info.
         """
+        testMode = True
+        autoTest = True
         game = Game()
-        game.build()
-        game.round_play()
+        game.build(testMode)
+        if autoTest:
+            tester = Tester(game)
+            tester.run_test()
+        else:
+            game.round_play()
+
         return game
 
 

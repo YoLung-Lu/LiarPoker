@@ -13,18 +13,22 @@ class CardSelector(FloatLayout):
 
     def build(self, board):
         self.player = self.id[0:7]
-        self.board = board
+        #self.parent = board
         self.cardDict = {1:'A', 10:'T', 11:'J', 12:'Q', 13:'K'}
         for i in range(2,10): self.cardDict[i] = str(i)
 
     def get_card(self):
-        # Player lies about his card and trigger event of board.
+        """
+        Player lies about his card and trigger event of board.
+        return type: str with 2 digit (Rank + Suit), rank in upper, suit in lower
+        E.g.: As or 7d
+        """
         # TODO: trigger event of PlayerDeck instead of board
         if self.suit:
             #print self.suit + str(int(self.ids.slider_id.value))
             card = self.cardDict[ (int(self.ids.slider_id.value)) ] + self.suit.lower()
 
-            self.board.on_player_lie(self.player, card)
+            self.parent.press_player_lie(self.player, card)
 
     def _select_suit(self, suit):
         self.suit = suit
