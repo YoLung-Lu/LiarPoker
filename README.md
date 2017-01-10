@@ -4,8 +4,8 @@ Liar Poker
 A Hold'em like poker game between 2 players that allow players to tell a lie on card he has.
 
 
-Game Flow
-----------
+## Game Flow
+
   * Game start:
     Each player got 5 cards and 500 chips. Also, 2 cards are opened as board cards.
 
@@ -19,39 +19,40 @@ Game Flow
 
   * Turn 2: Players select bet and reveal 1 card.
 
-  * Turn 3: Players select bet. He can then decide to reveal his last card or "lie" on the card he has.
+  * Turn 3: Players select bet. He can then decide to reveal his last card or **lie** on the card he has.
     If a player lied on his card, the last card he revealed will become the card he demanded.
 
-  * Turn 4: Players confirm the result of round or "suspect" on his opponent lied.
+  * Turn 4: Players confirm the result of round or **suspect** on his opponent lied.
     If the suspect stand, the player  caught will be punished for his lie.
 
 The game repeated until one player out of chip.
 
 
 
-Win A Game Round
-----------------
-Like Hold'em, this game has a "card winner", who has better card rank.
+## Win A Game Round
 
-However, card winner might not be the "round winner" if he is caught lied.
+Like Hold'em, this game has a **card winner**, who has better card rank.
 
-"Round winner" defined in this game is: the player receive more chip in the round.
+However, card winner might not be the **round winner** if he is caught lied.
+
+**Round winner** defined in this game is: the player receive more chip in the round.
 
 The shift of chip is related to card winner, action on lie and suspect.
 
 
 
-Chip Shift
-----------
+## Chip Shift
+
   Each turn has different bet:
 
-     \   Turn 1   2     3
+  Turn  \t1\t2\t3
 
-  Large    30    40    50
+  Large \t30\t40\t50
 
-  Middle   20    20    30
+  Middle\t20\t20\t30
 
-  Small    10    10    20
+  Small \t10\t10\t20
+
 
   * Fold:
     - If one player fold, all the bet in the round gave to his opponent.
@@ -76,20 +77,17 @@ Chip Shift
     - When a round has no winner, bonus continuous to grow.
 
 
-
 ## Note
 
 * 12/16/2016 First day.
-* 01/09/2017 First prototype.
-
+* 01/09/2017 Prototype.
 
 
 ## Powered by
 
-Kivy for android framework.
+[`Kivy`](https://github.com/kivy/kivy) for android framework.
 
 [`Deuces`](https://github.com/worldveil/deuces) for poker rules and evaluation of hands.
-
 
 
 ## Screenshot
