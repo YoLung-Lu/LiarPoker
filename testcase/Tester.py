@@ -40,8 +40,35 @@ class Tester():
         self._test_log("Test on 1 player lied")
         self._run_flow(lie = 1, suspect = 1)
 
-        ''' Test on 1 player fold '''
+        ''' Test on player fold '''
+        self._test_log("Test on player fold")
+        for i in range(1,4):
+            for j in range(1,3):
+                print "FOLD test: ", i, j
+                self._run_fold_flow(foldTurn = i, foldPlayerNo = j)
 
+    def _run_fold_flow(self, foldTurn = 1, foldPlayerNo = 1):
+        """
+        Play game with at least 1 player fold the round.
+        Arg foldTurn indicate the turn player fold.
+        Arg foldPlayerNo indicate number of player fold.
+        """
+        bet = 3 # fold
+
+        for turn in range(1,4):
+            for i in range(2):
+                if turn < foldTurn:
+                    self._call_on_player_confirm(self.player[i], turn)
+                elif turn == foldTurn:
+                    foldPlayer = randint(0,1)
+                    self._call_on_player_confirm(self.player[foldPlayer], turn, bet)
+                    if foldPlayerNo == 2:
+                        self._call_on_player_confirm(self.player[foldPlayer^1], turn, bet)
+                    else:
+                        self._call_on_player_confirm(self.player[foldPlayer^1], turn)
+                    break
+
+        self._call_on_press_new_round()
 
 
     def _run_flow(self, lie = 0, suspect = 0):
@@ -82,7 +109,7 @@ class Tester():
         self._call_on_press_new_round()
 
 
-    def _call_on_player_confirm(self, player, turn):
+    def _call_on_player_confirm(self, player, turn, bet = 1):
         """
         Generate input value for turn 1 player input event:
         on_player_confirm(self, boxid, thisPlayer, cardList, bet)
@@ -92,7 +119,7 @@ class Tester():
         cardList = [0,1,2]
         if turn > 1:
             cardList = [4]
-        bet = 1
+        bet = bet
         self.game.on_player_confirm( boxid, thisPlayer, cardList, bet )
 
     def _call_on_player_lie(self, player):

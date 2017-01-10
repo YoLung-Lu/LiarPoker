@@ -192,6 +192,7 @@ class Game(GameFlow, FloatLayout):
             print "Lie       : ", self.player[0].lie, "\t\t", self.player[1].lie
             print "Suspection: ", self.player[0].suspect, "\t\t", self.player[1].suspect
             print "Caught    : ", self.player[0].caught, "\t\t",  self.player[1].caught
+            print "Fold      : ", self.player[0].fold, "\t\t",  self.player[1].fold
             if cardWinner == 0: print "             Win\t\tLose"
             else: print "             Lose\t\tWin"
             print "Rate (winner/maintain/loser): ", winnerRate, maintainRate, loserRate
@@ -320,11 +321,12 @@ class Game(GameFlow, FloatLayout):
             self.player[0].chip += chip
             msg = "Player2"
 
-        msg += " fold in this round."
+        msg += " fold."
         print msg
 
         # set info for fold
         self.ids.publicArea.set_info( msg )
+        self.ids.publicArea.round_end("Round : " + str(self.round) +"\n" + msg + "\nNew Round" )
 
         self.round_reset_on_fold()
 
@@ -339,6 +341,7 @@ class Game(GameFlow, FloatLayout):
         self.ids.player2_box.round_end()
         self.board.round_end()
 
+        self.turn = 5 # able to end the game
 
     def turn_1_end(self):
         if self.testMode:

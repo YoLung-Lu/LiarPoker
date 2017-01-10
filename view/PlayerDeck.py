@@ -67,7 +67,6 @@ class PlayerDeck(GameFlow, BoxLayout):
         self._remove_suspect_widget()
         self._add_bet_widget(1)
 
-
         for i in range(5):
             self.ids[self.name + '_card'+str(i)].enable_check()
             self.ids[self.name + '_card'+str(i)].reset_card()
@@ -200,8 +199,9 @@ class PlayerDeck(GameFlow, BoxLayout):
 
     def _add_bet_widget(self, pos = 0):
         bs = self.widget_storage[self.name + "_bs"]
-        self.add_widget(bs, index = pos )
-        self.ids[bs.id] = bs
+        if not bs.parent:
+            self.add_widget(bs, index = pos )
+            self.ids[bs.id] = bs
 
     def _add_lie_widget(self):
         cs = self.widget_storage[self.name + "_cs"]
